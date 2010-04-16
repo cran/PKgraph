@@ -1,0 +1,4 @@
+export(PKgraph)
+
+import("RGtk2", "gWidgetsRGtk2", "lattice", "ggplot2", "rggobi")
+
