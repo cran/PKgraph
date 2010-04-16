@@ -66,7 +66,8 @@ pk.dataConfig <- function()
    myterm <- c("No match", "ID", "DV", "TIME", "PRED", "RES", "WRES",
                  "IPRE", "IDV", "COV", "ETA",
                   "PARAMETERS")
-   myNames <- colnames(getCurrentData())
+   currentMain <- svalue(pmg.dialog.notebook) 
+   myNames <- colnames(getCurrentData(currentMain))
    mylist <- list()
    knownterm <- getTerm()
    if (nrow(knownterm) > 0)
@@ -154,13 +155,13 @@ pk.uni.menu <- function()
     cleanPKCode()
     cleanPKGGobi()
     cleanDataSpecialPlot()
-    
+
+    currentMain <- svalue(pmg.dialog.notebook)  
+
    BGTest = BasicGUI$new(message="Univarate plot",
         widgetList = list(
-     x = list(type = "gdroplist", items = colnames(.pk$getCurrentData())),
+     x = list(type = "gdroplist", items = colnames(getCurrentData(currentMain))),
      "number of bins" = list(type="gedit",text=""),
-     "Time variable:" = list(type = "gdroplist", items = colnames(getCurrentData())),
-     "ID variable:" = list(type = "gdroplist", items = colnames(getCurrentData())),
      main = list(type="gedit",text=" "),
      xlab = list(type="gedit",text=" "),
      ylab = list(type="gedit",text=" "),
@@ -168,7 +169,7 @@ pk.uni.menu <- function()
 
     ),
        saveList = list(
-     cond = list(type = "gdroplist", items = c("", colnames(.pk$getCurrentData()))),
+     cond = list(type = "gdroplist", items = c("", colnames(getCurrentData(currentMain)))),
      layout_x = list(type="gedit",text="1"),
      layout_y = list(type="gedit", text="1") ,
      graphics = list(type="gradio", items = c("lattice","ggplot2"), horizontal=TRUE)
@@ -195,13 +196,13 @@ pk.bi.menu <- function()
     cleanPKCode()
     cleanPKGGobi()
     cleanDataSpecialPlot()
+
+    currentMain <- svalue(pmg.dialog.notebook)  
     
    BGTest = BasicGUI$new(message="Bivarate plots",
         widgetList = list(
-     x = list(type = "gdroplist", items = colnames(getCurrentData())),
-     y = list(type = "gdroplist", items = colnames(getCurrentData())),
-     "Time variable:" = list(type = "gdroplist", items = colnames(getCurrentData())),
-     "ID variable:" = list(type = "gdroplist", items = colnames(getCurrentData())),
+     x = list(type = "gdroplist", items = colnames(getCurrentData(currentMain))),
+     y = list(type = "gdroplist", items = colnames(getCurrentData(currentMain))),
      main = list(type="gedit",text=" "),
      xlab = list(type="gedit",text=" "),
      ylab = list(type="gedit",text=" "),
@@ -209,7 +210,7 @@ pk.bi.menu <- function()
      
     ),
        saveList = list(
-     cond = list(type = "gdroplist", items = c("", colnames(.pk$getCurrentData()))),
+     cond = list(type = "gdroplist", items = c("", colnames(getCurrentData(currentMain)))),
      layout_x = list(type="gedit",text="5"),
      layout_y = list(type="gedit", text="5") ,
      graphics = list(type="gradio", items = c("lattice","ggplot2"), horizontal=TRUE)
@@ -310,17 +311,19 @@ pk.para.menu <- function()
     # clean code from other window
     cleanPKCode()
     cleanPKGGobi()
+
+    currentMain <- svalue(pmg.dialog.notebook) 
     
    BGTest = BasicGUI$new(message="Parallel coordinates plot",
         widgetList = list(
 
-     x=list(type="gcheckboxgroup", items=colnames(getCurrentData())),
+     x=list(type="gcheckboxgroup", items=colnames(getCurrentData(currentMain))),
      main = list(type="gedit",text=" "),
      horizontal = list(type="gradio",items=c("TRUE", "FALSE"), horizontal=TRUE)
 
     ),
        saveList = list(
-     "conditional var" = list(type = "gdroplist", items = c("", colnames(getCurrentData()))),
+     "conditional var" = list(type = "gdroplist", items = c("", colnames(getCurrentData(currentMain)))),
      layout_x = list(type="gedit",text="1"),
      layout_y = list(type="gedit", text="1") ,
      graphics = list(type="gradio", items = c("lattice","ggplot2(Not support)"), horizontal=TRUE)
@@ -378,10 +381,12 @@ pk.matrix.menu <- function()
     cleanPKCode()
     cleanPKGGobi()
 
+    currentMain <- svalue(pmg.dialog.notebook) 
+
    BGTest = BasicGUI$new(message="Scatterplot matrix",
         widgetList = list(
 
-     x=list(type="gcheckboxgroup", items=colnames(getCurrentData())),
+     x=list(type="gcheckboxgroup", items=colnames(getCurrentData(currentMain))),
      main = list(type="gedit",text=" ")
     ),
        saveList = list(
@@ -409,6 +414,8 @@ pk.model.ind <- function()
     # clean code from other window
     cleanPKCode()
     cleanPKGGobi()
+
+    currentMain <- svalue(pmg.dialog.notebook) 
     
 ## specific check
    ## check var type for this function, particularly
@@ -422,7 +429,7 @@ pk.model.ind <- function()
         config.check <- gmessage(paste(dQuote(require.term[is.na(PK.match)]), " is NOT defined! Please Define it in Configure Menu.", sep=""),
                  icon = c("error"),title="Error")
 
-   all.items <- colnames(getCurrentData())
+   all.items <- colnames(getCurrentData(currentMain))
    id.ind <- which(require.term==all.items)
    ind.items <- all.items[-id.ind]
    
@@ -657,6 +664,7 @@ pk.model.resid <- function()
          "|IWRES|" = list(type="gdroplist", items = c(wres.items)),
          "IPRE" = list(type="gdroplist", items = c(pred.items)),
          "Covariates_4" = list(type="gdroplist", items = c(cov.items)),
+         "_________________________" = list(type="glabel", text=""),
          "Autocorrelation of WRES:" = list(type="gdroplist", items = c(wres.items))
 
         ),
@@ -721,7 +729,7 @@ pk.model.para <- function()
     ))
         BGTest$okButtonHandler = model.para.okButtonHandler
         BGTest$ggobiImageHandler = model.ggobiImageHandler
-        BGTest$saveImageHandler = saveImageHandler        
+        BGTest$saveImageHandler = saveImageHandler.pkmodel        
        BGTest$show()
    }
 }
@@ -775,7 +783,7 @@ pk.model.cov <- function()
     ))
         BGTest$okButtonHandler = model.cov.okButtonHandler
         BGTest$ggobiImageHandler = model.ggobiImageHandler
-        BGTest$saveImageHandler = saveImageHandler                
+        BGTest$saveImageHandler = saveImageHandler.pkmodel                
        BGTest$show()
    }
 }
@@ -815,7 +823,7 @@ pk.model.random <- function()
     ))
         BGTest$okButtonHandler = model.random.okButtonHandler
         BGTest$ggobiImageHandler = model.ggobiImageHandler
-        BGTest$saveImageHandler = saveImageHandler                        
+        BGTest$saveImageHandler = saveImageHandler.pkmodel                        
        BGTest$show()
    }
 }
@@ -854,7 +862,7 @@ pk.outlier.psn <- function()
      BGTest$okButtonHandler = psn.outlier.okButtonHandler
      BGTest$ggobiImageHandler = psn.outlier.ggobiImageHandler
 
-     BGTest$datagroup = 1
+     BGTest$datagroup = 0
      BGTest$saveImageHandler = saveImageHandler
      BGTest$show()
      
@@ -882,8 +890,7 @@ pk.outlier.vis <- function()
                    "Simulation folder pattern:" =list(type="gedit", text="NM_run"),
                    "NONMEM result file name:" =list(type="gedit", text="CS1_IV1ESTFPDF-1.fit"),
                    "Patient ID:" = list(type="gdroplist", items=colnames(getCurrentData(currentPage))),
-                   "Plot variable:" = list(type="gdroplist", items=colnames(getCurrentData(currentPage))),
-                   "xlabel:" = list(type="gedit", text="sim")
+                   "Plot variable:" = list(type="gdroplist", items=colnames(getCurrentData(currentPage)))
 
                    ),
                        saveList = list(
@@ -895,7 +902,7 @@ pk.outlier.vis <- function()
      BGTest$okButtonHandler = vis.outlier.okButtonHandler
      BGTest$ggobiImageHandler = vis.outlier.ggobiImageHandler
 
-     BGTest$datagroup = 1
+     BGTest$datagroup = 0
      BGTest$saveImageHandler = saveImageHandler
      BGTest$show()
 
@@ -930,8 +937,7 @@ pk.boot.vis <- function()
                    "Bootstrap key table path:" =list(type="gedit", text=""),
                    "Bootstrap key table name:" =list(type="gedit", text="included_individuals1.csv"),
                    "Patient ID:" = list(type="gdroplist", items=colnames(getCurrentData(currentPage))),
-                   "Plot variable:" = list(type="gdroplist", items=colnames(getCurrentData(currentPage))),
-                   "xlabel:" = list(type="gedit", text="sim")
+                   "Plot variable:" = list(type="gdroplist", items=colnames(getCurrentData(currentPage)))
                    ),
                        saveList = list(
                      graphics = list(type="gradio", items = c("lattice","ggplot2"), horizontal=TRUE)
@@ -940,8 +946,8 @@ pk.boot.vis <- function()
 
 
      BGTest$okButtonHandler = psn.bootstrap.vis.okButtonHandler
-     BGTest$ggobiImageHandler = boot.ggobiImageHandler
-     BGTest$datagroup = 1
+     BGTest$ggobiImageHandler = boot.vis.ggobiImageHandler
+     BGTest$datagroup = 0
      BGTest$saveImageHandler = saveImageHandler
      BGTest$show()
 

@@ -6,8 +6,6 @@
 ## Goal: note
 ##        - interface between function.R and proto.R
 ## Notes:
-##      - deal with "OK" button
-#############################################################################################
 
 ################################################################################
 ## global function
@@ -40,8 +38,19 @@ setDatasets <- function(tmp.data, dataname) .pk$setDatasets(tmp.data, dataname)
 getTotalDataLen <- function() .pk$getTotalDataLen()
 getTotalDataName <- function() .pk$getTotalDataName()
 
-getCurrentData <- function(currentNo) .pk$getCurrentData(currentNo)
+getCurrentData <- function(currentNo) 
+{
+  if (missing(currentNo))
+  {
+     currentMain <- svalue(pmg.dialog.notebook)
+    .pk$getCurrentData(currentMain)
+  }
+  else
+  {
+    .pk$getCurrentData(currentNo)
+  }
 
+}
 getCurrentDataType <- function(currentNo) .pk$getCurrentDataType(currentNo)
 setCurrentDataType <- function(thisDataType, dataname) .pk$setCurrentDataType(thisDataType, dataname)
 
@@ -91,6 +100,76 @@ setSaveFormat <- function(newformat) .pk$setSaveFormat(newformat)
 getFigConfig <- function() .pk$getFigConfig()
 setFigConfig <- function(newconfig) .pk$setFigConfig(newconfig)
 
+getGGobiPlotType <- function(currentNo) .pk$getGGobiPlotType(currentNo)  
+setGGobiPlotType <- function(typelist, dataname) .pk$setGGobiPlotType(typelist, dataname)   
+
+ggobiPlotType <- function()
+{
+    currentMain <- svalue(pmg.dialog.notebook)
+    ggobi.map = gwindow("Configure interactive graphics", horizontal=FALSE)
+
+    gtgroup1 = ggroup(cont=ggobi.map, horizontal=FALSE)
+
+    gf1 <- gframe(text = "", markup = FALSE, pos = 0, horizontal=TRUE, container = gtgroup1)
+    tbl <- glayout(cont=gf1)
+        
+      cline <- 0
+      tbl.list <- list()
+      dataname <- c("ID variable:", "Time variable:", "Concentration variable:")
+      
+      for (i in 1: length(dataname))
+      {
+          cline <- cline + 1
+
+          tbl[cline, 1, anchor = c(-1,-1)] = dataname[i]
+
+          tbl.list[[i]] = gdroplist(items=colnames(getCurrentData()))	
+          tbl[cline, 2, anchor = c(-1,-1)] = tbl.list[[i]]
+
+      }
+
+    gb1 = gbutton(text="Set PK data type", horizontal=FALSE )
+    addhandlerclicked(gb1, function(h,...)
+                    {
+                        key <- list( ID=svalue(tbl.list[[1]]) , Time=svalue(tbl.list[[2]]),
+                                     Conc=svalue(tbl.list[[3]]))
+
+                        setGGobiPlotType(key, as.character(currentMain))
+                        dispose(ggobi.map)
+
+                    })
+    cline <- cline + 1
+    tbl[cline, 2, anchor = c(-1,-1)] = gb1
+}
+
+## Goal: repeat code for runing ggobi time series plot
+ggobiRun <- function()       
+{
+      currentMain <- svalue(pmg.dialog.notebook)  
+      ggobi.data <- getCurrentData(currentMain)
+
+      Time.name <- getGGobiPlotType(as.character(currentMain))$Time
+      Conc.name <- getGGobiPlotType(as.character(currentMain))$Conc
+      ID.name <- getGGobiPlotType(as.character(currentMain))$ID
+
+      if (!is.null(Time.name))
+      {
+          ## rearrange time, conc as the first and second variable
+          time.ind <- which(colnames(ggobi.data)== Time.name)
+          conc.ind <- which(colnames(ggobi.data)== Conc.name)
+          old.ind <- c(1:length(colnames(ggobi.data)))
+          ggobi.data <- ggobi.data[c(time.ind, conc.ind, old.ind[-c(time.ind, conc.ind)])]
+
+          ggobi.text <- paste("g <- ggobi_longitudinal(ggobi.data", Time.name, ID.name, ")", sep=",")
+          eval(parse(text=ggobi.text))
+      }
+      else
+      {
+          g <- ggobi(ggobi.data)
+      }
+      
+      return(g)
+}
 
 ## check data exist
 checkDataExist <- function()
@@ -336,7 +415,7 @@ extractSimData <- function(dir.path, folder.name, file.name, id.var, cond.var)
                           ErrorMessage("There is no such file in these folders!")
                           return(invisible(NULL))
                       }
-                      rowLabel <- "sim"
+                      rowLabel <- "resample"
                       thisName <- paste(rowLabel, i, sep="")
                       final.df[[thisName]] <<- mydata[[cond.var]]
                       return(invisible(NULL))
@@ -486,7 +565,7 @@ extractBootData <- function(dir.path, folder.name, file.name, id.var, cond.var, 
                           ErrorMessage("There is no such file in these folders!")
                           return(invisible(NULL))
                       }
-                      rowLabel <- "sim"
+                      rowLabel <- "resample"
                       thisName <- paste(rowLabel, i, sep="")
                       final.df[[thisName]] <<- mydata[[cond.var]]
 
@@ -743,6 +822,7 @@ saveImageHandler = function(.,h,...)
         return(invisible(NULL))
     }
 
+    currentMain <- svalue(pmg.dialog.notebook) 
     currentPage <- svalue(pk.dialog.notebook)
     pkcode <- getPKCode(currentPage)
 
@@ -755,7 +835,75 @@ saveImageHandler = function(.,h,...)
         abs.no <- getNameDataSpecialPlot()
         abs.check <- currentPage %in% abs.no
         if (currentPage %in% abs.no) pkcode$pklist$data <- getDataSpecialPlot(as.character(currentPage))
-        else pkcode$pklist$data <- getCurrentData()
+        else pkcode$pklist$data <- getCurrentData(currentMain)
+    }
+    else pkcode$pklist$data <- getValidateData()
+
+    saveFormat <- getSaveFormat()
+
+    gfile("Save file",type="save", handler = function(h,...)
+      {
+          mycommand <- saveFormat$command
+
+          sapply(1:length(mycommand), function(i)
+          {   
+              # figureGroup: save one file or multiple file
+              if (.$figureGroup == 0)
+              {
+                  layout.plot <- getDataLayoutPlot()
+                  if (currentPage %in% layout.plot)  filename <- paste(h$file, "%3d.", mycommand[i], sep="")
+                  else  filename <- paste(h$file, mycommand[i], sep=".")
+              }
+              else
+                  filename <- paste(h$file, "%3d.", mycommand[i], sep="")
+
+              if (!is.na(saveFormat$width) && !is.na(saveFormat$width))
+                  mysavelist <- list(file=filename, width=saveFormat$width, height=saveFormat$height)
+              else
+                  mysavelist <- list(file=filename)
+
+              do.call(mycommand[i], mysavelist)
+              print(pkcode$pklist)
+              dev.off()
+          })
+          
+          
+          focus(.$window) <- TRUE
+          
+      })
+}
+
+saveImageHandler.pkmodel = function(.,h,...)   
+{
+## check saving format is setup!
+    if (!checkSaveFormat())
+    {
+        ErrorMessage("Please Menu configure to set save format first in main panel!")
+        return(invisible(NULL))
+    }
+    currentMain <- svalue(pmg.dialog.notebook) 
+    currentPage <- svalue(pk.dialog.notebook)
+    pkcode <- getPKCode(currentPage)
+
+    ## datagroup: data, boot, outlier
+    # datagroup = 0, save single plot; otherwise, multiple plot
+    # specialPlot, TRUE, - data, using others; otherwise, use getCurrentData()
+    if (.$datagroup == 0)
+    {
+        mydata <- getPKGGobi(currentPage)
+        x.name <- mydata$x        
+        if ((length(x.name) > 1) && (svalue(.$savewd[["graphics"]]) != "lattice")) 
+        {
+            ## for scatterplot matrix, do nothing
+        }
+        else
+        {   
+            # check data absolute or not
+            abs.no <- getNameDataSpecialPlot()
+            abs.check <- currentPage %in% abs.no
+            if (currentPage %in% abs.no) pkcode$pklist$data <- getDataSpecialPlot(as.character(currentPage))
+            else pkcode$pklist$data <- getCurrentData(currentMain)
+        }
     }
     else pkcode$pklist$data <- getValidateData()
 
@@ -802,6 +950,7 @@ saveImageHandler.matrix = function(.,h,...)
         return(invisible(NULL))
     }
 
+    currentMain <- svalue(pmg.dialog.notebook) 
     currentPage <- svalue(pk.dialog.notebook)
     pkcode <- getPKCode(currentPage)
 
@@ -817,7 +966,7 @@ saveImageHandler.matrix = function(.,h,...)
             abs.no <- getNameDataSpecialPlot()
             abs.check <- currentPage %in% abs.no
             if (currentPage %in% abs.no) pkcode$pklist$data <- getDataSpecialPlot(as.character(currentPage))
-            else pkcode$pklist$data <- getCurrentData()
+            else pkcode$pklist$data <- getCurrentData(currentMain)
         }
 
     }
@@ -865,7 +1014,8 @@ model.ggobiImageHandler = function(.,h,...)
 
         # check data absolute or not
       abs.no <- getNameDataSpecialPlot()
-      if (is.null(abs.no)) tmp.data <- getCurrentData()
+      currentMain <- svalue(pmg.dialog.notebook) 
+      if (is.null(abs.no)) tmp.data <- getCurrentData(currentMain)
       else
       {
             abs.check <- currentPage %in% abs.no
@@ -873,16 +1023,24 @@ model.ggobiImageHandler = function(.,h,...)
             else tmp.data <- getCurrentData()
       }
 
-      x.name <- mydata$x
-      x.ind <- which(colnames(tmp.data)== x.name)
+      x.name <- mydata$x      
       y.name <- mydata$y
+
       if (is.null(y.name))
       {
           g <- ggobi(tmp.data)
-          display(g[1], pmode="Barchart", vars=list(X = mydata$x))
+          if (length(x.name) == 1)
+          {  
+             display(g[1], pmode="Barchart", vars=list(X = mydata$x))
+          }
+          else # for scatterplot matrix
+          {
+             display(g[1], "Scatterplot Matrix", vars=list(X = mydata$x) )
+          }
       }
       else
       {
+	x.ind <- which(colnames(tmp.data)== x.name)
           y.ind <- which(colnames(tmp.data)== y.name)
           old.ind <- c(1:length(colnames(tmp.data)))
           old.ind <- old.ind[-c(x.ind, y.ind)]
@@ -907,10 +1065,11 @@ psn.outlier.ggobiImageHandler = function(.,h,...)
     ErrorMessage("No ggobi instance available for this data.")
 }
 
+
 vis.outlier.ggobiImageHandler = function(.,h,...)
 {
       # get ggobi <-> pk.dialog page: variable list
-      currentPage <- svalue(pk.dialog.notebook)
+      currentPage <- length(getNameDataSpecialPlot()) # new
       id.var <- svalue(.$widgets[["Patient ID:"]])
       
       mydata <- getDataSpecialPlot(as.character(currentPage))
@@ -928,7 +1087,7 @@ vis.outlier.ggobiImageHandler = function(.,h,...)
       oriname <- colnames(oridata)
       if (id.var %in% oriname)
       {
-          oriname <- gsub(id.var, "simID", oriname)
+          oriname <- gsub(id.var, "resampleID", oriname)
           colnames(oridata) <- oriname
       }
 
@@ -937,10 +1096,10 @@ vis.outlier.ggobiImageHandler = function(.,h,...)
 
 }
 
-boot.ggobiImageHandler = function(.,h,...)
+boot.vis.ggobiImageHandler = function(.,h,...)
 {
       # get ggobi <-> pk.dialog page: variable list
-      currentPage <- svalue(pk.dialog.notebook)
+      currentPage <- length(getNameDataSpecialPlot()) # new
       #cond.var <- svalue(.$widgets[["Plot variable:"]])
       id.var <- svalue(.$widgets[["Patient ID:"]])
 
@@ -971,7 +1130,9 @@ getHistCall <- function(hist.graphics, hist.x,
                 )
 {
     hist.col <- getFigConfig()$col
-    if (missing(hist.data)) hist.data <- .pk$getCurrentData()
+
+    currentMain <- svalue(pmg.dialog.notebook)  
+    if (missing(hist.data)) hist.data <- getCurrentData(currentMain)  
 
     if (hist.graphics == "lattice")
     {
@@ -1104,6 +1265,7 @@ getHistCall <- function(hist.graphics, hist.x,
         return(ggplot.final)
      }
 }
+
 getScatterCall <- function(hist.graphics, hist.x, hist.y,
                 hist.main,
                 hist.xlab,
@@ -1114,7 +1276,111 @@ getScatterCall <- function(hist.graphics, hist.x, hist.y,
                 hist.layout_y, hist.data
                 )
 {
-    if (missing(hist.data)) hist.data <- getCurrentData()
+    currentMain <- svalue(pmg.dialog.notebook)  
+    if (missing(hist.data)) hist.data <- getCurrentData(currentMain)  
+
+    hist.col <- getFigConfig()$col
+    
+    if ((missing(hist.type)) || hist.type=="") hist.type = "p"
+    if (!is.null(getFigConfig()$loess) && getFigConfig()$loess == 1) hist.type = c(hist.type, "smooth")
+
+    ## two graph packages
+    if (hist.graphics == "lattice")
+    {
+        x <- paste(hist.y, "~", hist.x, sep="")
+
+            if ( hist.cond == "")
+            {
+                x <- as.formula(x)
+                lattice.final <- xyplot(x=x, xlab=hist.xlab,
+                                ylab=hist.ylab, type= hist.type, col=hist.col,
+                                main=hist.main , data= hist.data)
+            }
+            else
+            {
+                x <-  as.formula(paste(x, "|", hist.cond, sep=" "))
+                lattice.layout <- as.numeric(c(hist.layout_x, hist.layout_y))
+                lattice.final <- xyplot(x=x, xlab=hist.xlab,
+                                ylab=hist.ylab, type= hist.type, col=hist.col,
+                                layout = lattice.layout,
+                                main=hist.main , data= hist.data)
+
+            }
+
+        return(lattice.final)
+
+     }
+     else  ## start ggplot
+     {
+        tmp.type <- NULL
+        if (length(hist.type) > 1)
+        {
+            tmp.type <- hist.type
+            hist.type <- hist.type[1]
+        }
+        hist.type <- switch(hist.type,
+                                    p = c("point"),
+                                    l = c("line"),
+                                    b = c("point", "line"),
+                                    #psmooth = c("point", "smooth"),
+                                    #lsmooth = c("line", "smooth"),
+                                    a = c("point", "line"),
+                                    percent = c("histogram"),
+                                    count = c("histogram"),
+                                    density = c("histogram")
+                                    )
+        if (!is.null(tmp.type)) hist.type <- c(hist.type, tmp.type[-1])
+
+        myx <- hist.data[[hist.x]]
+        myy <- hist.data[[hist.y]]
+
+        if ( !is.null(hist.cond) && hist.cond != "" )
+        {
+            # TODO
+            if (hist.layout_x == "" || hist.layout_y == "")
+            {
+               ErrorMessage("layout_x or layout_y is NOT specified for conditional variable")
+               return(invisible(NULL))
+            }
+
+            mycond <- hist.data[[hist.cond]]
+            total.figno <- as.numeric(hist.layout_x) * as.numeric(hist.layout_y)
+
+            if (length(unique(mycond)) > total.figno)
+            {
+                newno <- unique(mycond)[1:total.figno]
+                part.data <- hist.data[which(mycond%in%newno),]
+            }
+            else part.data <- hist.data
+
+            ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab,
+                                    ylab=hist.ylab, geom = hist.type, #colour = hist.col,
+                                    main=hist.main , data= part.data, se=F) + facet_wrap(hist.cond, ncol = as.numeric(hist.layout_x))
+
+        }
+        else
+        {
+            ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab,
+                                    ylab=hist.ylab, geom = hist.type, #colour = hist.col,
+                                    main=hist.main , data= hist.data, se=F)
+        }
+
+        return(ggplot.final)
+     }
+}
+
+getScatterCall.back <- function(hist.graphics, hist.x, hist.y,
+                hist.main,
+                hist.xlab,
+                hist.ylab,
+                hist.type,
+                hist.cond,
+                hist.layout_x,
+                hist.layout_y, hist.data
+                )
+{
+    currentMain <- svalue(pmg.dialog.notebook)  
+    if (missing(hist.data)) hist.data <- getCurrentData(currentMain)  
 
     hist.col <- getFigConfig()$col
     if (hist.type == "")
@@ -1580,9 +1846,9 @@ getPKBwplotCall <- function(hist.graphics, hist.x, hist.y,
         myx <- hist.data[[hist.x]]
         myy <- hist.data[[hist.y]]
 
-        ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab,
-                                ylab=hist.ylab, geom = hist.type, #colour = hist.col,
-                                main=hist.main , data= hist.data, se=F)
+        tmp1 <- paste("ggplot(hist.data, aes(factor(", hist.x, "),", hist.y, sep="")     
+        tmp2 <- paste(")) + geom_boxplot() +", "labs(x=hist.xlab, y=hist.ylab)", sep="")
+        ggplot.final <- eval(parse(text=paste(tmp1, tmp2, sep="")))
 
         if ( !is.null(hist.cond) && hist.cond != "" )
         {
@@ -1605,7 +1871,8 @@ getPKBwplotCall <- function(hist.graphics, hist.x, hist.y,
 
 getPKMatrixplotCall <- function(hist.graphics, hist.data)
 {
-    if (missing(hist.data)) hist.data <- getCurrentData()
+    currentMain <- svalue(pmg.dialog.notebook)  
+    if (missing(hist.data)) hist.data <- getCurrentData(currentMain)  
 
     hist.col <- getFigConfig()$col
 
@@ -1631,12 +1898,7 @@ getPKMatrixplotCall <- function(hist.graphics, hist.data)
 summary.uni.okButtonHandler = function(.,h,...)
 {
     tmp.para <- NULL
-    #for(i in names(.$widgetList))
-    #{
-      ## store vals in props of super
-     # .$.super$props[[i]] <- svalue(.$widgets[[i]]) # pre 0.4-0
-     #h$action$super$props[[i]] <- svalue(.$widgets[[i]])
-    #}
+
     pgraph = ggraphics(ps=6)
     size(pgraph) <- c(getSubHeight()*0.5, getSubWidth()*0.5)
     add(pk.dialog.notebook, pgraph, label = message,
@@ -1665,19 +1927,12 @@ summary.uni.okButtonHandler = function(.,h,...)
     #dispose(.$window)
 }
 
-summary.uni.ggobiImageHandler = function(.,h,...)
+summary.uni.ggobiImageHandler = function(.,h,...)   
 {
-      ggobi.data <- getCurrentData()
-
-      Time.name <- svalue(.$widgets[["Time variable:"]])
-      ID.name <- svalue(.$widgets[["ID variable:"]])
-
-      ggobi.text <- paste("g <- ggobi_longitudinal(ggobi.data", Time.name, ID.name, ")", sep=",")
-      eval(parse(text=ggobi.text))
+      g <- ggobiRun()
       
       currentPage <- svalue(pk.dialog.notebook)
       mydata <- getPKGGobi(currentPage)
-      
       display(g[1], pmode="Barchart", vars=list(X = mydata$x))
 }
 
@@ -1718,18 +1973,10 @@ summary.bi.okButtonHandler = function(.,h,...)
 }
 
 
-summary.bi.ggobiImageHandler = function(.,h,...)
+summary.bi.ggobiImageHandler = function(.,h,...)  # 0603
 {
+      g <- ggobiRun()
       currentPage <- svalue(pk.dialog.notebook)
-      ggobi.data <- getCurrentData()
-
-      Time.name <- svalue(.$widgets[["Time variable:"]])
-      ID.name <- svalue(.$widgets[["ID variable:"]])
-
-
-      ggobi.text <- paste("g <- ggobi_longitudinal(ggobi.data", Time.name, ID.name, ")", sep=",")
-      eval(parse(text=ggobi.text))
-      
       mydata <- getPKGGobi(currentPage)
       display(g[1], pmode="Scatterplot Display",
               vars=list(X=mydata$x, Y=mydata$y))
@@ -1791,13 +2038,9 @@ summary.tri.ggobiImageHandler = function(.,h,...)
 
 summary.para.okButtonHandler = function(.,h,...)
 {
-    #tmp.para <- NULL
-    #for(i in names(.$widgetList))
-    #{
-      ## store vals in props of super
-     # .$.super$props[[i]] <- svalue(.$widgets[[i]]) # pre 0.4-0
-     #h$action$super$props[[i]] <- svalue(.$widgets[[i]])
-    #}
+
+    currentMain <- svalue(pmg.dialog.notebook) 
+
     ## directly apply
     need.var <- svalue(.$widgets[["x"]])
     if (length(need.var) < 1)
@@ -1805,8 +2048,8 @@ summary.para.okButtonHandler = function(.,h,...)
         ErrorMessage("Please choose x variables!")
         return(invisible(NULL))
     }
-    all.data <- getCurrentData()
-    part.data <- getCurrentData()[,need.var]
+    all.data <- getCurrentData(currentMain)
+    part.data <- getCurrentData(currentMain)[,need.var]
 
     call.command <- "parallel"
     if (is.null(.$savewd[["conditional var"]]) ||(svalue(.$savewd[["conditional var"]])==""))
@@ -1839,7 +2082,7 @@ summary.para.okButtonHandler = function(.,h,...)
           override.closebutton = TRUE)
      print(call.final)
      setPKCode(list(pkcall=call.command, pklist=call.final))
-    #setPKGGobi(list(x=svalue(.$widgets[["x"]]), y=svalue(.$widgets[["y"]])))
+     setPKGGobi(list(x=need.var ))
     
     #print(parallel(~ para.data | factor(cond) , all.data, horizontal.axis= as.logical(svalue(.$widgets[["horizontal"]]))))
 
@@ -1848,22 +2091,14 @@ summary.para.okButtonHandler = function(.,h,...)
 
 summary.para.ggobiImageHandler = function(.,h,...)
 {
-    need.var <- svalue(.$widgets[["x"]])
-    if (length(need.var) < 1)
-    {
-        ErrorMessage("Please choose x variables!")
-        return(invisible(NULL))
-    }
-    all.data <- getCurrentData()
-    part.data <- getCurrentData()[,need.var]
-    g <- ggobi(part.data)
 
-    display(g[1], "Parallel Coordinates Display")
-      
+    g <- ggobiRun()
+   
+    currentPage <- svalue(pk.dialog.notebook)
+    mydata <- getPKGGobi(currentPage)
 
-      #display(g[1], pmode="Barchart", vars=list(X=svalue(.$widgets[[1]])))
-      #display(g[1], pmode="Scatterplot Display",
-              #vars=list(X=svalue(.$widgets[["x"]]), Y=svalue(.$widgets[["y"]])))
+    display(g[1], "Parallel Coordinates Display", vars=list(X=mydata$x))
+     
 }
 
 summary.heat.okButtonHandler = function(.,h,...)
@@ -1960,24 +2195,34 @@ summary.matrix.okButtonHandler = function(.,h,...)
         ErrorMessage("Please choose x variables!")
         return(invisible(NULL))
     }
+
+    currentMain <- svalue(pmg.dialog.notebook)
+    tmp.data <- getCurrentData(currentMain)
     part.data <- tmp.data[, chose.var]
     call.final <- getPKMatrixplotCall(hist.graphics= svalue(.$savewd[["graphics"]]), part.data)
 
     call.command <- "splom"
     print(call.final)
     setPKCode(list(pkcall=call.command, pklist=call.final))
+    setPKGGobi(list(x=chose.var ))
     
     currentPage <- svalue(pk.dialog.notebook)
     setDataSpecialPlot(part.data, as.character(currentPage))
 
 }
 
+
 summary.matrix.ggobiImageHandler = function(.,h,...)
 {
+    #currentPage <- svalue(pk.dialog.notebook)
+    #ggobi.data <- getDataSpecialPlot(as.character(currentPage))
+    #g <- ggobi(ggobi.data)
+
+    g <- ggobiRun()
+   
     currentPage <- svalue(pk.dialog.notebook)
-    ggobi.data <- getDataSpecialPlot(as.character(currentPage))
-    g <- ggobi(ggobi.data)
-    display(g[1], "Scatterplot Matrix")
+    mydata <- getPKGGobi(currentPage)
+    display(g[1], "Scatterplot Matrix", vars=list(X=mydata$x))
 }
 ################################################################################
 ################################################################################
@@ -2072,8 +2317,8 @@ model.gof.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2102,8 +2347,8 @@ model.gof.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2131,8 +2376,8 @@ model.gof.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2160,8 +2405,8 @@ model.gof.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2189,8 +2434,8 @@ model.gof.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2220,7 +2465,7 @@ model.struct.okButtonHandler = function(.,h,...)
     cond <- svalue(.$widgets[["IDV_1"]])
     part.data <- pkdata[c(myx,myy,cond)]
     
-    newstr <- paste(myy, "vs", myx, sep=" ")
+    newstr <- paste(myy, "vs", myx, "|", cond, sep=" ")
     plotType <- "scatter"
         pgraph = ggraphics(ps=6)
         add(pk.dialog.notebook, pgraph, label = newstr,
@@ -2230,9 +2475,9 @@ model.struct.okButtonHandler = function(.,h,...)
     call.final <- getPKScatterCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.y=myy,
-                                hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.main=newstr,
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = cond,
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2250,7 +2495,7 @@ model.struct.okButtonHandler = function(.,h,...)
     cond <- svalue(.$widgets[["IDV_2"]])
     part.data <- pkdata[c(myx,myy,cond)]
 
-    newstr <- paste(myy, "vs", myx, sep=" ")
+    newstr <- paste(myy, "vs", myx, "|", cond, sep=" ")
     plotType <- "scatter"
         pgraph = ggraphics(ps=6)
         add(pk.dialog.notebook, pgraph, label = newstr,
@@ -2261,9 +2506,9 @@ model.struct.okButtonHandler = function(.,h,...)
     call.final <- getPKScatterCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.y=myy,
-                                hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.main=newstr,
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = cond,
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2291,8 +2536,8 @@ model.struct.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2314,13 +2559,14 @@ model.struct.okButtonHandler = function(.,h,...)
         add(pk.dialog.notebook, pgraph, label = newstr,
               override.closebutton = TRUE)
 
+    pkdata[[myx]] <- factor(pkdata[[myx]]) 
     call.command <- "bwplot"
     call.final <- getPKBwplotCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2348,8 +2594,8 @@ model.struct.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2373,13 +2619,14 @@ model.struct.okButtonHandler = function(.,h,...)
               #pageno = 3,
               override.closebutton = TRUE)
 
+    pkdata[[myx]] <- factor(pkdata[[myx]])
     call.command <- "bwplot"
     call.final <- getPKBwplotCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2396,7 +2643,7 @@ model.struct.okButtonHandler = function(.,h,...)
     myy <- svalue(.$widgets[["PRED_7"]])
     cond <- svalue(.$widgets[["COV_7"]])
 
-    newstr <- paste(myy, "vs", myx, sep=" ")
+    newstr <- paste(myy, "vs", myx, "|", cond, sep=" ")
     plotType <- "scatter"
         pgraph = ggraphics(ps=6)
         add(pk.dialog.notebook, pgraph, label = newstr,
@@ -2406,9 +2653,9 @@ model.struct.okButtonHandler = function(.,h,...)
     call.final <- getPKScatterCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.y=myy,
-                                hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.main=newstr,
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = cond,
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2425,7 +2672,7 @@ model.struct.okButtonHandler = function(.,h,...)
     myy <- svalue(.$widgets[["IPRE_8"]])
     cond <- svalue(.$widgets[["COV_8"]])
 
-    newstr <- paste(myy, "vs", myx, sep=" ")
+    newstr <- paste(myy, "vs", myx, "|", cond, sep=" ")
     plotType <- "scatter"
         pgraph = ggraphics(ps=6)
         add(pk.dialog.notebook, pgraph, label = newstr,
@@ -2437,8 +2684,8 @@ model.struct.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = cond,
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2478,7 +2725,7 @@ model.resid.okButtonHandler = function(.,h,...)
     call.final <- getPKHistCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.bin = "",
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -2506,7 +2753,7 @@ model.resid.okButtonHandler = function(.,h,...)
     call.command <- "qqmath"
     call.final <- getPKQqmathCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -2541,7 +2788,7 @@ model.resid.okButtonHandler = function(.,h,...)
     call.final <- getPKHistCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.bin = "",
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -2574,7 +2821,7 @@ model.resid.okButtonHandler = function(.,h,...)
         call.command <- "qqmath"
         call.final <- getPKQqmathCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -2610,7 +2857,7 @@ model.resid.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
+                                hist.xlab=myx,
                                 hist.ylab="|WRES|",
                                 hist.type= "",
                                 hist.cond = "",
@@ -2627,8 +2874,8 @@ model.resid.okButtonHandler = function(.,h,...)
     
     # Covariates vs |WRES| (bw):
     mylist <- list()
-    myx <- svalue(.$widgets[["|WRES|_2"]])
-    myy <- svalue(.$widgets[["Covariates_2"]])
+    myx <- svalue(.$widgets[["Covariates_2"]])
+    myy <- svalue(.$widgets[["|WRES|_2"]])
     
     # get |WRES|
     part.data <- pkdata[c(myx,myy)]
@@ -2643,13 +2890,14 @@ model.resid.okButtonHandler = function(.,h,...)
               #pageno = 3,
               override.closebutton = TRUE)
 
+    part.data[[myx]] <- factor(part.data[[myx]])   
     call.command <- "bwplot"
     call.final <- getPKBwplotCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="|WRES|",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab="|WRES|",
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2672,7 +2920,7 @@ model.resid.okButtonHandler = function(.,h,...)
     part.data <- pkdata[c(myx, myy, cond)]
     part.data[,2] <- abs(part.data[,2])
 
-    newstr <- paste(myy, "vs", myx, sep=" ")
+    newstr <- paste("|", myy, "|", "vs", myx, "|", cond, sep=" ")
     plotType <- "scatter"
         pgraph = ggraphics(ps=6)
         add(pk.dialog.notebook, pgraph, label = newstr,
@@ -2682,8 +2930,8 @@ model.resid.okButtonHandler = function(.,h,...)
     call.final <- getPKScatterCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.y=myy,
-                                hist.main="",
-                                hist.xlab="",
+                                hist.main=newstr,
+                                hist.xlab=myx,
                                 hist.ylab="|WRES|",
                                 hist.type= "",
                                 hist.cond = cond,
@@ -2723,8 +2971,8 @@ model.resid.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond ="",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2764,7 +3012,7 @@ model.para.okButtonHandler = function(.,h,...)
     call.final <- getPKHistCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.bin = "",
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -2794,7 +3042,7 @@ model.para.okButtonHandler = function(.,h,...)
     call.command <- "qqmath"
     call.final <- getPKQqmathCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -2809,7 +3057,6 @@ model.para.okButtonHandler = function(.,h,...)
     setPKGGobi(list(x=myx, y=NULL))
         
     # Scatterplot matrix of parameters
-    mylist <- list()
     newstr <- "Scatterplot matrix of parameters"
     plotType <- "smatrix"
 
@@ -2817,8 +3064,6 @@ model.para.okButtonHandler = function(.,h,...)
         add(pk.dialog.notebook, pgraph, label = newstr,
               #pageno = 3,
               override.closebutton = TRUE)
-
-    mycall <- getCall(mypackage, plotType)
 
     tmp.data <- pkdata[c(mypara)]
 
@@ -2829,7 +3074,7 @@ model.para.okButtonHandler = function(.,h,...)
         call.final <- getPKMatrixplotCall(hist.graphics= svalue(.$savewd[["graphics"]]), tmp.data)
         print(call.final)
         setPKCode(list(pkcall=call.command, pklist=call.final))
-        setPKGGobi(list(x=colnames(tmp.data)[1], y=colnames(tmp.data)[2] ))
+        setPKGGobi(list(x=colnames(tmp.data), y=NULL))
     }
 
     # Parameter vs parameter:
@@ -2849,8 +3094,8 @@ model.para.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2891,7 +3136,7 @@ model.cov.okButtonHandler = function(.,h,...)
         call.final <- getPKMatrixplotCall(hist.graphics= svalue(.$savewd[["graphics"]]), tmp.data)
         print(call.final)
         setPKCode(list(pkcall=call.command, pklist=call.final))
-        setPKGGobi(list(x=colnames(tmp.data)[1], y=colnames(tmp.data)[2] ))
+        setPKGGobi(list(x=colnames(tmp.data), y=NULL)) 
 
     }
     
@@ -2912,8 +3157,8 @@ model.cov.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2942,8 +3187,8 @@ model.cov.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -2971,8 +3216,8 @@ model.cov.okButtonHandler = function(.,h,...)
                                 hist.x=myx,
                                 hist.y=myy,
                                 hist.main="",
-                                hist.xlab="",
-                                hist.ylab="",
+                                hist.xlab=myx,
+                                hist.ylab=myy,
                                 hist.type= "",
                                 hist.cond = "",
                                 hist.layout_x = svalue(.$savewd[["layout_x"]]),
@@ -3008,7 +3253,7 @@ model.random.okButtonHandler = function(.,h,...)
     call.final <- getPKHistCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
                                 hist.bin = "",
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -3035,7 +3280,7 @@ model.random.okButtonHandler = function(.,h,...)
     call.command <- "qqmath"
     call.final <- getPKQqmathCall(hist.graphics = svalue(.$savewd[["graphics"]]),
                                 hist.x=myx,
-                                hist.main="",
+                                hist.main=newstr,
                                 hist.xlab="",
                                 hist.ylab="",
                                 hist.type= "",
@@ -3050,7 +3295,6 @@ model.random.okButtonHandler = function(.,h,...)
     setPKGGobi(list(x=myx, y=NULL))
      
     #Scatterplot matrix of ETAs:
-    mylist <- list()
     newstr <- "Scatterplot matrix of ETAs"
     plotType <- "smatrix"
 
@@ -3070,7 +3314,7 @@ model.random.okButtonHandler = function(.,h,...)
         call.final <- getPKMatrixplotCall(hist.graphics= svalue(.$savewd[["graphics"]]), tmp.data)
         print(call.final)
         setPKCode(list(pkcall=call.command, pklist=call.final))
-        setPKGGobi(list(x=colnames(tmp.data)[1], y=colnames(tmp.data)[2] ))
+        setPKGGobi(list(x=colnames(tmp.data), y=NULL)) 
         
     }
     
@@ -3126,6 +3370,8 @@ psn.outlier.okButtonHandler = function(.,h,...)
                 print(call.final)
                 call.command <- "xyplot"
                 setPKCode(list(pkcall=call.command, pklist=call.final))
+                currentPage <- svalue(pk.dialog.notebook)
+                setDataSpecialPlot(mydata, as.character(currentPage))
     }
     else
         ErrorMessage("Please choose proper files first!")
@@ -3140,7 +3386,7 @@ vis.outlier.okButtonHandler = function(.,h,...)
     startFileName <- svalue(.$widgets[["NONMEM result file name:"]])
     cond.var <- svalue(.$widgets[["Plot variable:"]])
     id.var <- svalue(.$widgets[["Patient ID:"]])
-    rowLabel <- svalue(.$widgets[["xlabel:"]])
+    rowLabel <- "resampleID"
 
     # match the current data set
     currentPage <- svalue(pmg.dialog.notebook)
@@ -3192,24 +3438,26 @@ vis.outlier.okButtonHandler = function(.,h,...)
                 }
                 print(call.final)
                 setPKCode(list(pkcall=call.command, pklist=call.final))
+                currentPage <- svalue(pk.dialog.notebook)
+                setDataSpecialPlot(mydata1, as.character(currentPage))
                 # setGGobi
             }
 
             # plot 2 ---------- histogram
             boot.all <- NULL
-            simid.all <- NULL
+            resampleID.all <- NULL
             id.all <- NULL
 
             sapply(1:ncol(extract.data), function(i)
                   {
                      #miss.id <- which(! id.unique %in% boot.data[,i])
                      boot.all <<- c(boot.all, extract.data[,i])
-                     simid.all <<- c(simid.all, rep(i, nrow(extract.data)))
+                     resampleID.all <<- c(resampleID.all, rep(i, nrow(extract.data)))
                      id.all <<- c(id.all, rownames(extract.data))
                      invisible(NULL)
                   })
 
-            boot.df <- data.frame(ID=id.all, simID=simid.all, para=boot.all)
+            boot.df <- data.frame(ID=id.all, resampleID=resampleID.all, para=boot.all)
 
             message <- "Grouped by patient ID"
             pgraph = ggraphics(ps=6)
@@ -3229,6 +3477,8 @@ vis.outlier.okButtonHandler = function(.,h,...)
             print(call.final)
             call.command <- "densityplot"
             setPKCode(list(pkcall=call.command, pklist=call.final))
+            currentPage <- svalue(pk.dialog.notebook)
+            setDataSpecialPlot(boot.df, as.character(currentPage))
 
             message <- "Grouped by case deletion run ID"
             pgraph = ggraphics(ps=6)
@@ -3237,17 +3487,19 @@ vis.outlier.okButtonHandler = function(.,h,...)
 
             if (svalue(.$savewd[["graphics"]]) == "lattice")
             {
-                call.final <- densityplot(~para, groups=simID, data=boot.df,
+                call.final <- densityplot(~para, groups=resampleID, data=boot.df,
                               main="grouped by case deletion run ID", xlab=cond.var)
             }
             else
             {
                 call.final <- ggplot(boot.df, aes(para)) + stat_density(geom = "path",
-                      position = "identity", aes(colour = factor(simID))) + xlab(cond.var)
+                      position = "identity", aes(colour = factor(resampleID))) + xlab(cond.var)
             }
             print(call.final)
             call.command <- "densityplot"
             setPKCode(list(pkcall=call.command, pklist=call.final))
+            currentPage <- svalue(pk.dialog.notebook)
+            setDataSpecialPlot(boot.df, as.character(currentPage))
 
            # plot 3 ---------- parallel coor plot
             message <- "Parallel coordinate plot"
@@ -3256,11 +3508,15 @@ vis.outlier.okButtonHandler = function(.,h,...)
                       override.closebutton = TRUE)
             scale.data <- rbind(extract.data, min(extract.data, na.rm=T), max(extract.data, na.rm=T))
 
-            if (svalue(.$savewd[["graphics"]]) == "lattice")
-            {
-                call.final <- parallel(~scale.data, main="bounded by global min and max", ylab="Case deletion ID")
-            }
-            else
+
+
+            call.final <- parallel(~scale.data, main="bounded by global min and max", ylab="Case deletion ID")
+            call.command <- "parallel"
+            setPKCode(list(pkcall=call.command, pklist=call.final))
+            currentPage <- svalue(pk.dialog.notebook)
+            setDataSpecialPlot(scale.data, as.character(currentPage))
+
+            if (svalue(.$savewd[["graphics"]]) != "lattice")
             {
                 scale.data <- namerows(scale.data, col.name = "ID")
                 df <- melt(scale.data[-10], id.var = c("ID"))
@@ -3273,8 +3529,6 @@ vis.outlier.okButtonHandler = function(.,h,...)
 
             }
             print(call.final)
-            call.command <- "parallel"
-            setPKCode(list(pkcall=call.command, pklist=call.final))
 
            # plot 4 ---------- MDS plot
             e2.data <- t(extract.data)
@@ -3300,12 +3554,12 @@ vis.outlier.okButtonHandler = function(.,h,...)
             #print(call.text)
 
             #NOTE: NEED TO UPDATE -- "SIM" with proper one
-            mydata2 <- data.frame(cor1=x, cor2=y, simID=gsub(rowLabel, "", names(x)))
+            mydata2 <- data.frame(cor1=x, cor2=y, resampleID=gsub(rowLabel, "", names(x)))
 
             if (svalue(.$savewd[["graphics"]]) == "lattice")
             {
                 call.final <- xyplot(cor2~cor1, data= mydata2,
-                                        groups=simID,
+                                        groups=resampleID,
                                         type="l",
                                         xlab="Coordinate 1",
                                         ylab="Coordinate 2",
@@ -3319,7 +3573,7 @@ vis.outlier.okButtonHandler = function(.,h,...)
             }
             else
             {
-                call.final <- qplot(cor1, cor2, data = mydata2, label = simID,
+                call.final <- qplot(cor1, cor2, data = mydata2, label = resampleID,
                                 geom=c("point", "text")) + xlab("Coordinate 1") + ylab("Coordinate 2")
             }
 
@@ -3327,17 +3581,16 @@ vis.outlier.okButtonHandler = function(.,h,...)
                 print(call.final)
                 call.command <- "xyplot"
                 setPKCode(list(pkcall=call.command, pklist=call.final))
+                currentPage <- svalue(pk.dialog.notebook)
+                setDataSpecialPlot(mydata2, as.character(currentPage))
 
          ## interactive graphics data
-         ig.data <- merge(boot.df, mydata2, by="simID")
-         ig.data <- ig.data[,c("simID", "para", "ID", "cor1", "cor2")]
-         ig.data$simID <- factor(ig.data$simID)
+         ig.data <- merge(boot.df, mydata2, by="resampleID")
+         ig.data <- ig.data[,c("resampleID", "para", "ID", "cor1", "cor2")]
+         ig.data$resampleID <- factor(ig.data$resampleID)
 
-         currentPage <- as.numeric(svalue(pk.dialog.notebook))
-         sapply(1:currentPage, function(i)
-                {
-                   setDataSpecialPlot(ig.data, as.character(i))
-                })
+         currentPage <- length(getNameDataSpecialPlot()) + 1
+         setDataSpecialPlot(ig.data, as.character(currentPage))
         
 
       }
@@ -3357,7 +3610,7 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
     
     cond.var <- svalue(.$widgets[["Plot variable:"]])
     id.var <- svalue(.$widgets[["Patient ID:"]])
-    rowLabel <- svalue(.$widgets[["xlabel:"]])
+    rowLabel <- "resampleID"
 
     # match the current data set
     currentPage <- svalue(pmg.dialog.notebook)
@@ -3385,19 +3638,19 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
 
     # dat prepare for bootstrap number
     boot.all <- NULL
-    simid.all <- NULL
+    resampleID.all <- NULL
     id.all <- NULL
 
     sapply(1:ncol(extract.data), function(i)
           {
              #miss.id <- which(! id.unique %in% boot.data[,i])
              boot.all <<- c(boot.all, extract.data[,i])
-             simid.all <<- c(simid.all, rep(i, nrow(extract.data)))
+             resampleID.all <<- c(resampleID.all, rep(i, nrow(extract.data)))
              id.all <<- c(id.all, rownames(extract.data))
              invisible(NULL)
           })
 
-    boot.df <- data.frame(ID=id.all, simID=simid.all, para=boot.all)
+    boot.df <- data.frame(ID=id.all, resampleID=resampleID.all, para=boot.all)
 
     ####################################
     ## plot
@@ -3414,18 +3667,20 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
 
     if (svalue(.$savewd[["graphics"]]) == "lattice")
     {
-        call.final <- xyplot(simID~ID, data=choose.df, type="p", xlab="Bootstrap ID",
+        call.final <- xyplot(resampleID~ID, data=choose.df, type="p", xlab="Bootstrap ID",
                       main="Bootstrap randomization check")
     }
     else
     {
-        call.final <- qplot(ID, simID, data=choose.df, geom=c("point"), xlab="Bootstrap ID",
+        call.final <- qplot(ID, resampleID, data=choose.df, geom=c("point"), xlab="Bootstrap ID",
                       main="Bootstrap randomization check")
     }
     
     print(call.final)
     call.command <- "xyplot"
     setPKCode(list(pkcall=call.command, pklist=call.final))
+    currentPage <- svalue(pk.dialog.notebook)
+    setDataSpecialPlot(choose.df, as.character(currentPage))
 
     message <- "grouped by bootstrap run ID"
     pgraph = ggraphics(ps=6)
@@ -3434,17 +3689,19 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
                       
     if (svalue(.$savewd[["graphics"]]) == "lattice")
     {
-        call.final <- densityplot(~para, groups=simID, data=boot.df,
+        call.final <- densityplot(~para, groups=resampleID, data=boot.df,
                       main="grouped by bootstrap run ID", xlab=cond.var )
     }
     else
     {
         call.final <- ggplot(boot.df, aes(para)) + stat_density(geom = "path",
-                      position = "identity", aes(colour = factor(simID))) + xlab(cond.var)
+                      position = "identity", aes(colour = factor(resampleID))) + xlab(cond.var)
     }
     print(call.final)
     call.command <- "densityplot"
     setPKCode(list(pkcall=call.command, pklist=call.final))
+    currentPage <- svalue(pk.dialog.notebook)
+    setDataSpecialPlot(boot.df, as.character(currentPage))
     
     ## plot n ------------- rank boostrap variability
     extract.var <- NULL
@@ -3475,18 +3732,26 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
     print(call.final)
     call.command <- "xyplot"
     setPKCode(list(pkcall=call.command, pklist=call.final))
+    currentPage <- svalue(pk.dialog.notebook)
+    setDataSpecialPlot(var.plot, as.character(currentPage))
 
-    currentPage <- as.numeric(svalue(pk.dialog.notebook))
-    sapply(1:currentPage, function(i)
-          {
-              setDataSpecialPlot(var.plot, as.character(i))
-          })
+    currentPage <- length(getNameDataSpecialPlot()) + 1
+    setDataSpecialPlot(var.plot, as.character(currentPage))
+
+    #currentPage <- as.numeric(svalue(pk.dialog.notebook))
+    #sapply(1:currentPage, function(i)
+          #{
+          #    setDataSpecialPlot(var.plot, as.character(i))
+          #})
     
 }
 
 psn.bootstrap.sum.okButtonHandler = function(.,h,...)
 {
-
+   while (svalue(pk.dialog.notebook) > 1)
+   {
+      dispose(pk.dialog.notebook)
+   }
 
     file1 <- svalue(.$widgets[["PsN result file:"]])
     file2 <- svalue(.$widgets[["Bootstrap key file:"]])
@@ -3694,8 +3959,7 @@ psn.bootstrap.sum.okButtonHandler = function(.,h,...)
 
 psn.bootstrap.ggobiImageHandler = function(.,h,...)
 {
-      g <- ggobi(getCurrentData())
-      display(g[1], pmode="Scatterplot Display", vars=list(X=svalue(.$widgets[[1]]), Y=svalue(.$widgets[[2]])))
+    ErrorMessage("No ggobi instance available for this data.")
 }
 
 

@@ -44,6 +44,9 @@
     .saveFormat <- list()
     .figureConfig <- list(col="royalblue")
 
+    # ggobi data type
+    .ggobiPlotType <- list()
+
     
     list(
             getTerm = function() return(.term),
@@ -79,7 +82,10 @@
             {
                 if (missing(currentNo))
                 {
-                    if(length(.datasets)!= 0) return(.datasets[[length(.datasets)]])
+                    if(length(.datasets)!= 0) 
+		{
+		    return(.datasets[[length(.datasets)]])
+		}
                     else return(NULL)
                 }
                 else
@@ -127,13 +133,6 @@
             getComMap = function() return(.comMap),
             setComMap = function(key.df) .comMap <<- key.df,
 
-            ##################
-            #setDir = function(vlabel) svalue(.pk.dir) <<- vlabel,
-            #getDir = function() return(.pk.dir),
-
-            #setDirName = function(vtable) svalue(.pk.dirname) <<- vtable,
-            #getDirName = function() return(.pk.dirname),
-
             getSubHeight = function() return(.subheight),
             getSubWidth = function() return(.subwidth),
 
@@ -171,7 +170,30 @@
             getSaveFormat = function() return(.saveFormat),
             
             setFigConfig = function(newconfig) .figureConfig <<- newconfig,
-            getFigConfig = function() return(.figureConfig)
+            getFigConfig = function() return(.figureConfig),
+
+            ## ggobi time series plot requirement
+            getGGobiPlotType = function(currentNo)   
+            {
+	      
+
+                if (missing(currentNo))
+                {
+                    if(length(.ggobiPlotType)!= 0) return(.ggobiPlotType[[length(.ggobiPlotType)]])
+                    else return(NULL)
+                }
+                else
+                {
+                      if (currentNo > length(.ggobiPlotType)) return(NULL) 
+                      else return(.ggobiPlotType[[currentNo]])
+                }
+
+            },
+
+            setGGobiPlotType = function(typelist, dataname)  
+            {
+                .ggobiPlotType[[dataname]] <<- typelist
+            }
 
     )
     
@@ -190,5 +212,5 @@ pk.dir = NULL
 global.data <- NULL
 
 ## for specific data type
-requiredDataType.PKmodel <- "Data"
+requiredDataType.PKmodel <- "PK data"
 modelComType <- "ModelComparison"

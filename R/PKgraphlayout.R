@@ -27,6 +27,7 @@ mbl = list(
     ),
     
     Configure = list(
+        "Set data type" = list(handler= function(h,...) ggobiPlotType()),	
         "Set working directory" = list(handler= configDirHandler),
         "Set saving format" = list(handler= configFormatHandler),
         "Set figure configuration" = list(handler= configFigureHandler)
@@ -53,7 +54,7 @@ mbl = list(
         "Configure model result" = list(handler= configDataHandler),
          Sep = list(separator=TRUE),
         "Individual plots" = list(handler= function(h,...) pk.model.ind()),
-        "Goodness of fit plots" = list(handler= function(h,...) pk.model.gof()),
+        "Basic goodness of fit plots" = list(handler= function(h,...) pk.model.gof()),
         "Parameters" = list(handler= function(h,...) pk.model.para()),
         "Random effects" = list(handler= function(h,...) pk.model.random()),
         "Structural model" = list(handler= function(h,...) pk.model.struct()),

@@ -241,6 +241,7 @@ BasicGUI = proto(
 ################################################################################
 simple.okButtonHandler = function(.,h,...)
 {
+    
     myName <- colnames(getCurrentData())
     termDf <- data.frame(Varname=rep(NA, length(myName)), TermName=rep(NA, length(myName)))
     sapply(1:length(myName), function(i) termDf[i,] <<- c(myName[[i]], svalue(.$widgets[[myName[i]]])) )

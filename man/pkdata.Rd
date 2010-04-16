@@ -1,9 +1,9 @@
 \name{pkdata}
 \alias{pkdata}
 \docType{data}
-\title{ Sample data for PKgraph}
+\title{Sample data for PKgraph}
 \description{
-A sample data
+A sample data from https://www.accp1.org.
 }
 \usage{data(pkdata)}
 \format{

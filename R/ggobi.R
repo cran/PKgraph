@@ -267,6 +267,10 @@ ggobi.diagose <- function()
                           {
                               data.index <- which(split.value[1]==select.names)
                               myx <- paste("X", split.value[1], ".",split.value[2], sep="")
+			if (Sys.info()[["sysname"]] != "Windows")
+			{
+				myx <- gsub("/", ".", myx)
+			}
                               display(ggobi.object[data.index], pmode="Barchart", vars=list(X= myx))
                           }
                           else
@@ -274,7 +278,15 @@ ggobi.diagose <- function()
 
                               data.index <- which(split.value[1]==select.names)
                               myx <- paste("X", split.value[1], ".",split.value[4], sep="")
+			if (Sys.info()[["sysname"]] != "Windows")
+			{
+				myx <- gsub("/", ".", myx)
+			}
                               myy <- paste("X", split.value[1], ".",split.value[2], sep="")
+			if (Sys.info()[["sysname"]] != "Windows")
+			{
+				myy <- gsub("/", ".", myy)
+			}
                               display(ggobi.object[data.index], pmode="Scatterplot Display", vars=list(X= myx, Y= myy))
                           }
 
@@ -312,6 +324,10 @@ ggobi.diagose <- function()
                               {
                                   data.index <- which(split.value[1]==select.names)
                                   myx <- paste("X", split.value[1], ".",split.value[2], sep="")
+			    if (Sys.info()[["sysname"]] != "Windows")
+			    {
+				myx <- gsub("/", ".", myx)
+			    }
                                   display(ggobi.object[data.index], pmode="Barchart", vars=list(X= myx))
                               }
                               else
@@ -319,7 +335,15 @@ ggobi.diagose <- function()
 
                                   data.index <- which(split.value[1]==select.names)
                                   myx <- paste("X", split.value[1], ".",split.value[4], sep="")
+			    if (Sys.info()[["sysname"]] != "Windows")
+			    {
+				myx <- gsub("/", ".", myx)
+			    }
                                   myy <- paste("X", split.value[1], ".",split.value[2], sep="")
+			    if (Sys.info()[["sysname"]] != "Windows")
+			    {
+				myy <- gsub("/", ".", myy)
+			    }
                                   display(ggobi.object[data.index], pmode="Scatterplot Display", vars=list(X= myx, Y= myy))
                               }
 

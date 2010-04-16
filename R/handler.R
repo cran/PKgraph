@@ -22,7 +22,7 @@ openDataHandler <- function(h,...)
     tbl <- glayout(cont=gf1)
     tbl[1,1, anchor=c(-1,-1)] = glabel("Choose file types:")
     #datatype = gradio(selected = 1, horizontal = FALSE, items = c("Data","Bootstrap result", "Outlier and influential result"))
-    datatype = gdroplist(items = c("Data","Bootstrap result", "Outlier and influential result"))
+    datatype = gdroplist(items = c("PK data","General data"))
     tbl[1,2] = datatype
     tbl[2,1, anchor=c(-1,-1)] = glabel("File format: ")
 
@@ -71,7 +71,8 @@ openDataHandler <- function(h,...)
                                         skip=as.numeric(svalue(startline))-1))
                   }
                   
-                  if (svalue(datatype) == "Data") data.config <- 1
+                  myType <- svalue(datatype)  
+                  if ( myType == "PK data") data.config <- 1     
                   else data.config <- 0
                   
 
@@ -94,6 +95,10 @@ openDataHandler <- function(h,...)
                   ## setup status
                   svalue(pmg.statusBar) <- "Data is loaded successfully."
 
+                  if (myType == "PK data")    # 0603
+                  {
+                      ggobiPlotType()
+                  }
 
                 })
 
@@ -213,6 +218,10 @@ restoreHandler <- function(h,...)
 
 exitHandler<-function(h,...)
 {
+    cleanDataSpecialPlot()
+    cleanDataLayoutPlot()
+    cleanPKCode()
+    cleanPKGGobi()
     dispose(PKW)
 }
 
