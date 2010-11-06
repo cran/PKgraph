@@ -48,12 +48,61 @@ openDataHandler <- function(h,...)
     fileheader = gdroplist(items = c("TRUE","FALSE"))
     tbl[5,2] = fileheader
     
-    #tbl2 <- glayout(cont=gtgroup2)
+    tbl[6,1, anchor=c(-1,-1)] = glabel("_________________________")
+    tbl[7,1, anchor=c(-1,-1)] = glabel("Data from R environment ")
+    dataRen = gdroplist(items = c("", ls(envir=.GlobalEnv)))
+    tbl[7,2] = dataRen
 
     gb1 = gbutton(text="Click to open", horizontal=FALSE )
     addhandlerclicked(gb1, function(h,...)
       {
+        if (svalue(dataRen) != "")
+        {    
+             tmp.data <- eval(parse(text= svalue(dataRen)), envir=.GlobalEnv)
+             if ((!is.data.frame(tmp.data)) && (!is.matrix(tmp.data)))
+             {
+                 ErrorMessage("Data is neither DATA.FRAME nor MATRIX")
+                 return(NULL)             
+             }
+                  myType <- svalue(datatype)  # 0603
+                  if ( myType == "PK data") data.config <- 1     # 0603
+                  else data.config <- 0
+                  
+                  #.pk$setDatasets(tmp.data, thisDatano)
+                  #.pk$setCurrentDatano(thisDatano)
+                   #browser()
+                  ## use number as data name
+                  filename <- svalue(dataRen)
+                  filename <- filename[length(filename)]
+                  
+                  #thisDataName <- paste(getTotalDataLen() + 1, "_", svalue(datatype), sep="")
+                  thisDataName <- paste(getTotalDataLen() + 1, "_", filename, sep="")
 
+                  setDatasets(tmp.data, thisDataName) # use no as data name
+                  setCurrentDataType(svalue(datatype), thisDataName)
+
+                  dispose(gtmp.win)
+
+                  ptable=gtable(tmp.data, multiple=TRUE, expand=TRUE)
+                  pkmain.add(ptable, as.character(thisDataName), override.closebutton = TRUE)
+
+                  ## for command area
+                  #attach(tmp.data)
+
+                  ## configure data
+
+
+                  ## setup status
+                  svalue(pmg.statusBar) <- "Data is loaded successfully."
+
+                  if (myType == "PK data")    # 0603
+                  {
+                      ggobiPlotType()
+                                      
+                  }             
+        }
+        else
+        {
             gfile("Select a file",type="open",
                 #action="read.csv",
                 handler = function(h,...)
@@ -62,13 +111,36 @@ openDataHandler <- function(h,...)
                   if (svalue(filetype) == "txt")
                   {
                      
-                     tmp.data <<- do.call("read.table",list(h$file, header=as.logical(svalue(fileheader)), sep=svalue(sepline),
-                                        skip=as.numeric(svalue(startline))-1))
+                     #tmp.data <<- do.call("read.table",list(h$file, header=as.logical(svalue(fileheader)), sep=svalue(sepline),
+                                        #skip=as.numeric(svalue(startline))-1))
+                     test <<- try(do.call("read.table",list(h$file, header=as.logical(svalue(fileheader)), sep=svalue(sepline),
+                                        skip=as.numeric(svalue(startline))-1)))
+
+                     if (inherits(test, "try-error")) 
+                     {
+                        ErrorMessage("Data can NOT be read in! Please check sample data using data(pkdata)")
+                        return(NULL)
+                     }
+                     else
+                     {
+                        tmp.data <<- test
+                     }                                        
                   }
                   else
                   {
-                      tmp.data <<- do.call("read.csv",list(h$file, header=as.logical(svalue(fileheader)),
-                                        skip=as.numeric(svalue(startline))-1))
+                      #tmp.data <<- do.call("read.csv",list(h$file, header=as.logical(svalue(fileheader)),
+                      #                  skip=as.numeric(svalue(startline))-1))
+                      test <<- try(do.call("read.csv",list(h$file, header=as.logical(svalue(fileheader)),
+                                        skip=as.numeric(svalue(startline))-1)))
+                     if (inherits(test, "try-error")) 
+                     {
+                        ErrorMessage("Data can NOT be read in! Please check sample data using data(pkdata)")
+                        return(NULL)
+                     }
+                     else
+                     {
+                        tmp.data <<- test
+                     }                      
                   }
                   
                   myType <- svalue(datatype)  
@@ -101,11 +173,20 @@ openDataHandler <- function(h,...)
                   }
 
                 })
-
+            }
          })
 
-    tbl[6,2] = gb1
+    tbl[8,2] = gb1
    
+}
+
+cleanDataHandler <- function(h,...)
+{
+    cleanAll()
+    if (length(pmg.dialog.notebook) > 0)
+        for (i in 1: length(pmg.dialog.notebook)) dispose(pmg.dialog.notebook)
+    else  ErrorMessage("No data to clean!")
+
 }
 
 setHandler<-function(h,...)
@@ -121,7 +202,7 @@ setHandler<-function(h,...)
 }
 
 
-saveHandler<-function(h,...)
+saveHandler <- function(h,...)
 {
    # check data exist
     if(!checkDataExist())
@@ -133,8 +214,18 @@ saveHandler<-function(h,...)
     gfile("Save currrent data", type="save",
               action="dput", handler = function(h,...)
               {
-                   currentData <- getCurrentData()
-                   dput(currentData, h$file)
+                   currentMain <- svalue(pmg.dialog.notebook)
+                   currentData <- getCurrentData(currentMain)
+                   if (length(grep(".txt", h$file)) == 0) 
+                   {
+                      filename <- paste(h$file, ".txt", sep="")
+                   }
+                   else
+                   {
+                      filename <- h$file
+                   }
+                   write.table(currentData, file=filename, sep="\t")
+                   
                    svalue(pmg.statusBar) <- "File has been saved successfully."
               })
 }
@@ -214,6 +305,11 @@ restoreHandler <- function(h,...)
           }
       })
     
+}
+
+helpHandler<-function(h,...)
+{
+    print(vignette("PKgraph", package="PKgraph", all=TRUE))
 }
 
 exitHandler<-function(h,...)

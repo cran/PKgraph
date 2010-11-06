@@ -68,13 +68,16 @@ BasicGUI = proto(
     gseparator(horizontal=FALSE, cont=gim)
     pk.dialog.image3 <- gimage("dataframe", dirname="stock", cont=gim, size="large_toolbar")
     gseparator(horizontal=FALSE, cont=gim)
+    pk.dialog.image31 <- gimage("save-as", dirname="stock", cont=gim, size="large_toolbar")    
+    gseparator(horizontal=FALSE, cont=gim)    
     pk.dialog.image4 <- gimage("close", dirname="stock", cont=gim, size="large_toolbar")
     addhandlerclicked(pk.dialog.image1, handler=.$saveImageHandler)
     addhandlerclicked(pk.dialog.image2, handler=.$ggobiImageHandler)
     addhandlerclicked(pk.dialog.image3, handler=.$dataframeImageHandler)
+    addhandlerclicked(pk.dialog.image31, handler=.$saveasImageHandler)    
     addhandlerclicked(pk.dialog.image4, handler=.$closeImageHandler)
     
-    pk.dialog.notebook <<- gnotebook(closebuttons = TRUE,dontCloseThese = 1, tearable = FALSE)
+    pk.dialog.notebook <<- gnotebook(closebuttons = TRUE, tearable = FALSE)
     size(pk.dialog.notebook) <<- c(getSubHeight()*0.3, getSubHeight()*0.5)
     
     rightpane = gpanedgroup(gim, pk.dialog.notebook, horizontal = FALSE)
@@ -144,6 +147,10 @@ BasicGUI = proto(
       cancelButton = gbutton("cancel", cont=bg,
         action = list(self=., super=.super),
         handler = .$cancelButtonHandler)
+    if(!is.null(.$cleanFigureButtonHandler))
+      cleanFigureButton = gbutton("Clean Figures", cont=bg,
+        action = list(self=., super=.super),
+        handler = .$cleanFigureButtonHandler)        
     if(!is.null(.$clearButtonHandler))
       clearButton = gbutton("clear", cont=bg,
         action = list(self=., super=.super),
@@ -164,7 +171,11 @@ BasicGUI = proto(
   closeImageHandler = NULL,
   okButtonHandler = NULL,
   dataframeImageHandler = NULL,
-  
+
+  cleanFigureButtonHandler = function(.,h,...) #1031
+  {
+  },
+    
   saveImageHandler = function(.,h,...)
   {
   },
@@ -196,6 +207,31 @@ BasicGUI = proto(
       }
   },
 
+  saveasImageHandler = function(.,h,...)   # 1110
+  {
+    if (!is.null(ggobi_get()))
+    {
+            ggobi.data <- ggobi_get()[1]
+            ggobi.select <- glyph_colour(ggobi.data)
+            ## not equal default value: 1
+            mydata <- ggobi.data[ggobi.select != 1,]
+            
+            gfile("Save file",type="save", handler = function(h,...)
+              {
+                filename <- paste(h$file, "csv", sep=".")
+                write.csv(mydata, file=filename)
+                focus(.$window) <- TRUE
+              })          
+  
+     }
+     else
+     {
+            ErrorMessage("You have to start ggobi using second ICON first!")
+     }
+  
+  
+  },
+  
   cancelButtonHandler = function(.,h,...)
   {
       dispose(.$window)
@@ -254,9 +290,9 @@ simple.okButtonHandler = function(.,h,...)
 }
 
 SimpleGUI = proto(
-  new = function(., message = "Simple GUI",...)
+  new = function(., message = "Simple GUI", note = NULL,...)
   {
-     .$proto(message=message,...)
+     .$proto(message=message, note=note,...)
   },
 
   ## method to check if window has been drawn or destroyed
@@ -315,7 +351,8 @@ SimpleGUI = proto(
   {
     ## add buttons help, cancel, ok (if xxxButtonHandler is not NULL)
     gseparator(cont=container)
-    bg = ggroup(cont=container)
+    bg0 = ggroup(cont=container, horizontal=FALSE) 
+    bg = ggroup(cont=bg0) 
 
      addSpace(bg, getSubWidth()/10, horizontal=TRUE)
 
@@ -329,6 +366,12 @@ SimpleGUI = proto(
       okButton = gbutton("ok", cont=bg,
         action = list(self=., super=.super),
         handler = .$okButtonHandler)
+        
+    if (!is.null(.$note))  
+    {
+        gf.note = ggroup(cont=bg0)
+        glabel(.$note, cont=gf.note)
+    }        
   },
 
   ## Notice, the signature includes the initial "."
@@ -365,6 +408,7 @@ SimpleGUI = proto(
 
   ## properties
   message = "Basic widget",
+  note = NULL,                         
   props = list(),                     # for storing properties of widgets
   ## for generic use
   widgetList =  list(),

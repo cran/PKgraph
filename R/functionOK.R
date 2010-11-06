@@ -135,12 +135,21 @@ ggobiPlotType <- function()
                                      Conc=svalue(tbl.list[[3]]))
 
                         setGGobiPlotType(key, as.character(currentMain))
+                        
+                        tmp.data <- getCurrentData(currentMain)
+                        tmp.name <- getTotalDataName()[currentMain]
+                        tmp.data[,key$ID] <- factor(tmp.data[,key$ID])
+                        setDatasets(tmp.data, tmp.name)
+                        
                         dispose(ggobi.map)
+                        svalue(pmg.statusBar) <- "Data types are configured successfully."                        
 
                     })
     cline <- cline + 1
     tbl[cline, 2, anchor = c(-1,-1)] = gb1
 }
+
+cleanAll <- function() .pk$cleanAll()
 
 ## Goal: repeat code for runing ggobi time series plot
 ggobiRun <- function()       
@@ -443,12 +452,25 @@ extractCddData <- function(dir.path, folder.name, file.name, id.var, cond.var, t
         {
 
             target.dir <- dir(pattern=folder.name)
+            if (length(target.dir)==0)      
+            {
+                ErrorMessage("In the Target directory, there is NO such folder pattern!")
+                return(invisible(NULL))
+            }
+                        
             sapply(1:length(target.dir), function(i)
                   {
                       if (file.name %in% list.files(path=target.dir[i]))
                       {
                           fileName <- paste(target.dir[i], file.name, sep="/")
                           sim.data <- read.table(fileName, header=T, skip=1)
+                          if (!all(c(id.var, cond.var) %in% colnames(sim.data)))
+                          {
+                              ErrorMessage(paste("In simulation folder - ", target.dir[i], ", Patiend ID or Plot variable
+                                           does not match the NONMEM result file !", sep=""))
+                              return(invisible(NULL))
+                          }                          
+                          
                           mydata <- unique(sim.data[,c(id.var, cond.var)])
 
                           ## if cond.var is non-subject-specific,
@@ -476,7 +498,7 @@ extractCddData <- function(dir.path, folder.name, file.name, id.var, cond.var, t
                       }
                       else
                       {
-                          ErrorMessage("There is no such file in these folders!")
+                          ErrorMessage(paste("In simulation folder - ", target.dir[i], ", there is NO such NONMEM result file!", sep=""))
                           return(invisible(NULL))
                       }
 
@@ -523,6 +545,13 @@ extractBootData <- function(dir.path, folder.name, file.name, id.var, cond.var, 
 
                           fileName <- paste(real.dir[i], file.name, sep="/")
                           sim.data <- read.table(fileName, header=T, skip=1)
+            
+                          if (!all(c(id.var, cond.var) %in% colnames(sim.data)))
+                          {
+                              ErrorMessage(paste("In simulation folder - ", real.dir[i], ", Patiend ID or Plot variable
+                                           does not match the NONMEM result file !", sep=""))
+                              return(invisible(NULL))
+                          }
                           
                           if (is.null(bootKey.table))
                           {
@@ -562,7 +591,7 @@ extractBootData <- function(dir.path, folder.name, file.name, id.var, cond.var, 
                       }
                       else
                       {
-                          ErrorMessage("There is no such file in these folders!")
+                          ErrorMessage(paste("In simulation folder - ", real.dir[i], ", there is NO such NONMEM result file!", sep=""))
                           return(invisible(NULL))
                       }
                       rowLabel <- "resample"
@@ -1068,19 +1097,15 @@ psn.outlier.ggobiImageHandler = function(.,h,...)
 
 vis.outlier.ggobiImageHandler = function(.,h,...)
 {
-      # get ggobi <-> pk.dialog page: variable list
       currentPage <- length(getNameDataSpecialPlot()) # new
       id.var <- svalue(.$widgets[["Patient ID:"]])
       
       mydata <- getDataSpecialPlot(as.character(currentPage))
       # make it factor, so can link all together
       mydata[[id.var]] <- factor(mydata[[id.var]])
-      g <- ggobi(mydata)
-         #display(g[1], "Parallel Coordinates Display")
-      display(g[1], pmode="Scatterplot Display",
-                 vars=list(X="cor1", Y="cor2"))
-                 
-      oridata <- getCurrentData()
+      
+      currentMain <- svalue(pmg.dialog.notebook)           
+      oridata <- getCurrentData(currentMain)
       oridata[[id.var]] <- factor(oridata[[id.var]])
       
       # replace name, so that all plots have same ID name to link
@@ -1091,28 +1116,64 @@ vis.outlier.ggobiImageHandler = function(.,h,...)
           colnames(oridata) <- oriname
       }
 
-      g["Time series plots"] <- oridata
-      display(g[2], pmode="Scatterplot Display",vars=list(X="TIME", Y="CONC"))
+      Time.name <- getGGobiPlotType(as.character(currentMain))$Time
+      Conc.name <- getGGobiPlotType(as.character(currentMain))$Conc
+      ID.name <- getGGobiPlotType(as.character(currentMain))$ID
+      if (length(Time.name)==0 || length(Conc.name)==0 || length(ID.name)==0)
+      {
+          ErrorMessage("Please make sure the input file type is PK data!")
+          return(invisible(NULL))
+      }
 
+      Time.ind <- which(colnames(oridata)==Time.name)
+      Conc.ind <- which(colnames(oridata)==Conc.name)
+      oridata <- cbind(oridata[,c(Time.ind, Conc.ind)], oridata[,-c(Time.ind, Conc.ind)])
+
+      gtext <- paste("ggobi_longitudinal(oridata,", Time.name, ", resampleID)", sep="")
+      g <- eval(parse(text=gtext))
+            
+      # not g[2], because the edges of longitudinal data is g[2] 
+      g["moreplot"] <- mydata
+      display(g[3], pmode="Scatterplot Display",
+                 vars=list(X="cor1", Y="cor2"))
+      display(g[3], pmode="Scatterplot Display",
+                 vars=list(X="resampleID", Y="para"))
 }
 
 boot.vis.ggobiImageHandler = function(.,h,...)
 {
-      # get ggobi <-> pk.dialog page: variable list
-      currentPage <- length(getNameDataSpecialPlot()) # new
-      #cond.var <- svalue(.$widgets[["Plot variable:"]])
+      currentPage <- length(getNameDataSpecialPlot()) 
       id.var <- svalue(.$widgets[["Patient ID:"]])
 
       mydata <- getDataSpecialPlot(as.character(currentPage))
 
       # make it factor, so can link all together
       mydata[[id.var]] <- factor(mydata[[id.var]])
-      g <- ggobi(mydata)
 
-      oridata <- getCurrentData()
+      currentMain <- svalue(pmg.dialog.notebook)
+      oridata <- getCurrentData(currentMain)
+      Time.name <- getGGobiPlotType(as.character(currentMain))$Time
+      Conc.name <- getGGobiPlotType(as.character(currentMain))$Conc
+      ID.name <- getGGobiPlotType(as.character(currentMain))$ID
+
+      if (length(Time.name)==0 || length(Conc.name)==0 || length(ID.name)==0)
+      {
+          ErrorMessage("Please make sure the input file type is PK data!")
+          return(invisible(NULL))
+      }
+
+      Time.ind <- which(colnames(oridata)==Time.name)
+      Conc.ind <- which(colnames(oridata)==Conc.name)
+      oridata <- cbind(oridata[,c(Time.ind, Conc.ind)], oridata[,-c(Time.ind, Conc.ind)])      
+
       oridata[[id.var]] <- factor(oridata[[id.var]])
-      g["Time series plots"] <- oridata
-      display(g[2], pmode="Scatterplot Display",vars=list(X="TIME", Y="CONC"))
+      gtext <- paste("ggobi_longitudinal(oridata,", Time.name, ",", ID.name, ")", sep="")
+      g <- eval(parse(text=gtext))
+
+      g["moreplot"] <- mydata
+      # not g[2], because the edges of longitudinal data is g[2]
+      display(g[3], pmode="Scatterplot Display",
+                 vars=list(X="ID", Y="VAR"))
 
 }
 
@@ -1295,6 +1356,13 @@ getScatterCall <- function(hist.graphics, hist.x, hist.y,
                 lattice.final <- xyplot(x=x, xlab=hist.xlab,
                                 ylab=hist.ylab, type= hist.type, col=hist.col,
                                 main=hist.main , data= hist.data)
+                ## type: ts
+                if (hist.type == "ts" && (!is.null(getGGobiPlotType(currentMain)$ID)) )
+                {
+                    lattice.final <- xyplot(x=x, xlab=hist.xlab, ylab=hist.ylab, 
+                                  type=c("l","p"), groups= hist.data[,getGGobiPlotType(currentMain)$ID],
+                                  main=hist.main , data= hist.data)
+                 }
             }
             else
             {
@@ -1305,6 +1373,14 @@ getScatterCall <- function(hist.graphics, hist.x, hist.y,
                                 layout = lattice.layout,
                                 main=hist.main , data= hist.data)
 
+                ## type: ts
+                if (hist.type == "ts" && (!is.null(getGGobiPlotType(currentMain)$ID)) )
+                {
+                    lattice.final <- xyplot(x=x, xlab=hist.xlab, ylab=hist.ylab, 
+                                type=c("l","p"), groups= hist.data[,getGGobiPlotType(currentMain)$ID],
+                                layout = lattice.layout,
+                                main=hist.main , data= hist.data)
+                 }
             }
 
         return(lattice.final)
@@ -1322,6 +1398,7 @@ getScatterCall <- function(hist.graphics, hist.x, hist.y,
                                     p = c("point"),
                                     l = c("line"),
                                     b = c("point", "line"),
+                                    ts = c("ts"),
                                     #psmooth = c("point", "smooth"),
                                     #lsmooth = c("line", "smooth"),
                                     a = c("point", "line"),
@@ -1353,16 +1430,37 @@ getScatterCall <- function(hist.graphics, hist.x, hist.y,
             }
             else part.data <- hist.data
 
-            ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab,
+             ## type: ts
+             if (hist.type == "ts" && (!is.null(getGGobiPlotType(currentMain)$ID)) )
+             {
+                ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab, ylab=hist.ylab, 
+                                    geom = c("point", "line"), colour = part.data[,getGGobiPlotType(currentMain)$ID],
+                                    main=hist.main , data= part.data, se=F) + facet_wrap(hist.cond, ncol = as.numeric(hist.layout_x)) + opts(legend.position="none")
+             
+             }
+             else
+             {
+                ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab,
                                     ylab=hist.ylab, geom = hist.type, #colour = hist.col,
                                     main=hist.main , data= part.data, se=F) + facet_wrap(hist.cond, ncol = as.numeric(hist.layout_x))
-
+             
+             }
         }
         else
         {
-            ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab,
+
+             if (hist.type == "ts" && (!is.null(getGGobiPlotType(currentMain)$ID)) )
+             {
+                ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab, ylab=hist.ylab, 
+                                    geom = c("point", "line"), colour = hist.data[,getGGobiPlotType(currentMain)$ID],
+                                    main=hist.main , data= hist.data, se=F) + opts(legend.position="none")            
+             }
+             else
+             {
+                ggplot.final <- qplot(x=myx, y=myy, xlab=hist.xlab,
                                     ylab=hist.ylab, geom = hist.type, #colour = hist.col,
-                                    main=hist.main , data= hist.data, se=F)
+                                    main=hist.main , data= hist.data, se=F)             
+             }                                    
         }
 
         return(ggplot.final)
@@ -1895,6 +1993,17 @@ getPKMatrixplotCall <- function(hist.graphics, hist.data)
 #getSubWidth() = 800
 #size(pmg.dialog.notebook) <- c(getSubWidth()*0.6,getSubHeight()*.67)
 ################################################################################
+cleanFigureButtonHandler = function(.,h,...)  #1031
+{
+    # clean code from other window
+    cleanPKCode()
+    cleanPKGGobi()
+    cleanDataSpecialPlot()
+    
+    for(i in 1:length(pk.dialog.notebook))
+      dispose(pk.dialog.notebook)
+}
+
 summary.uni.okButtonHandler = function(.,h,...)
 {
     tmp.para <- NULL
@@ -3324,9 +3433,7 @@ model.random.okButtonHandler = function(.,h,...)
 ################################################################################
 ## Menu "Model validation"
 ################################################################################
-## TODO:
-# - progress bar
-# - two kinds of variable: subject-specific, non-subject-specific
+ 
 psn.outlier.okButtonHandler = function(.,h,...)
 {
     file1 <- svalue(.$widgets[["Result file:"]])
@@ -3334,7 +3441,14 @@ psn.outlier.okButtonHandler = function(.,h,...)
 
     if (file1!="" && file2!="")
     {
-        mydata <- data.frame(psn.cdd(file1, file2))
+        checkdata <- psn.cdd(file1, file2)
+        if (is.null(checkdata)) 
+        {
+            ErrorMessage("Two files are not right format for PsN!")
+            return(invisible(NULL))
+        }
+        
+        mydata <- data.frame(checkdata)    
 
         ## TODO: what does this function for?
         #setValidateData(mydata)
@@ -3388,6 +3502,12 @@ vis.outlier.okButtonHandler = function(.,h,...)
     id.var <- svalue(.$widgets[["Patient ID:"]])
     rowLabel <- "resampleID"
 
+    if (target.dirpath=="" || sim.pattern=="" || startFileName=="")
+    {
+        ErrorMessage("Please input all parameters first!")
+        return(invisible(NULL))
+    }    
+
     # match the current data set
     currentPage <- svalue(pmg.dialog.notebook)
     total.id <- unique(getCurrentData(currentPage)[[id.var]])
@@ -3401,7 +3521,27 @@ vis.outlier.okButtonHandler = function(.,h,...)
 
     if (target.dirpath!="")
     {
+    
+            ## start process bar
+            convertW = gwindow(title="Processing...", parent=c(150,200), height=getSubHeight()*0.05, width=getSubWidth()*0.5, horizontal=FALSE)
+            convert.group =ggroup(horizontal=FALSE, spacing=0, expand=TRUE)
+            convert.bar <- gtkProgressBar()
+      
+            add(convert.group, convert.bar)
+            add(convertW, convert.group)
+      
+            # start with something
+            gtkProgressBarSetFraction(convert.bar, 0.2)
+      
             cdd.list <- extractCddData(target.dirpath, sim.pattern, startFileName, id.var, cond.var, total.id, rowLabel)
+            if (is.null(cdd.list))
+            {
+                dispose(convertW)
+                return(invisible(NULL))
+            }
+                        
+            gtkProgressBarSetFraction(convert.bar, 0.7)
+            
             extract.data <- cdd.list$data
             extract.data <- data.frame(extract.data)
             v.delete.id <- cdd.list$deleteID
@@ -3501,6 +3641,8 @@ vis.outlier.okButtonHandler = function(.,h,...)
             currentPage <- svalue(pk.dialog.notebook)
             setDataSpecialPlot(boot.df, as.character(currentPage))
 
+            gtkProgressBarSetFraction(convert.bar, 0.8)
+
            # plot 3 ---------- parallel coor plot
             message <- "Parallel coordinate plot"
             pgraph = ggraphics(ps=6)
@@ -3530,6 +3672,8 @@ vis.outlier.okButtonHandler = function(.,h,...)
             }
             print(call.final)
 
+            gtkProgressBarSetFraction(convert.bar, 0.9)
+            
            # plot 4 ---------- MDS plot
             e2.data <- t(extract.data)
             #colnames(e2.data) <- 1:ncol(e2.data)
@@ -3592,7 +3736,8 @@ vis.outlier.okButtonHandler = function(.,h,...)
          currentPage <- length(getNameDataSpecialPlot()) + 1
          setDataSpecialPlot(ig.data, as.character(currentPage))
         
-
+         gtkProgressBarSetFraction(convert.bar, 1.0)
+         dispose(convertW)
       }
 
 }
@@ -3612,6 +3757,12 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
     id.var <- svalue(.$widgets[["Patient ID:"]])
     rowLabel <- "resampleID"
 
+    if (target.dirpath=="" || sim.pattern=="" || startFileName=="" || boot.key.path=="" || boot.key.name=="")
+    {
+        ErrorMessage("Please input all parameters first!")
+        return(invisible(NULL))
+    }
+
     # match the current data set
     currentPage <- svalue(pmg.dialog.notebook)
     total.id <- unique(getCurrentData(currentPage)[[id.var]])
@@ -3626,15 +3777,40 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
 
     if (Sys.info()[["sysname"]] == "Windows")
     {
-    	bootKey.table <- read.csv(paste(boot.key.path, boot.key.name, sep="\\"), header=F)
+    	check.bootkey <- try(bootKey.table <- read.csv(paste(boot.key.path, boot.key.name, sep="\\"), header=F))
+    	
     }
     else
     {
-    	bootKey.table <- read.csv(paste(boot.key.path, boot.key.name, sep="/"), header=F)
+    	check.bootkey <- try(bootKey.table <- read.csv(paste(boot.key.path, boot.key.name, sep="/"), header=F))
     }
+    
+    if (inherits(check.bootkey, "try-error"))
+    {
+       ErrorMessage("Bootstrap key table can NOT be read!")
+       return(invisible(NULL))
+    }    
+
+## start process bar
+      convertW = gwindow(title="Processing...", parent=c(150,200), height=getSubHeight()*0.05, width=getSubWidth()*0.5, horizontal=FALSE)
+      convert.group =ggroup(horizontal=FALSE, spacing=0, expand=TRUE)
+      convert.bar <- gtkProgressBar()
+
+      add(convert.group, convert.bar)
+      add(convertW, convert.group)
+
+      # start with something
+      gtkProgressBarSetFraction(convert.bar, 0.2)
 
     ori.data <- extractBootData(target.dirpath, sim.pattern, startFileName, id.var, cond.var, bootKey.table, total.id, 1)
+    if (is.null(ori.data))
+    {
+        dispose(convertW)
+        return(invisible(NULL))
+    }
+    
     extract.data <- data.frame(ori.data)
+    gtkProgressBarSetFraction(convert.bar, 0.7)
 
     # dat prepare for bootstrap number
     boot.all <- NULL
@@ -3681,7 +3857,8 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
     setPKCode(list(pkcall=call.command, pklist=call.final))
     currentPage <- svalue(pk.dialog.notebook)
     setDataSpecialPlot(choose.df, as.character(currentPage))
-
+    gtkProgressBarSetFraction(convert.bar, 0.8)
+    
     message <- "grouped by bootstrap run ID"
     pgraph = ggraphics(ps=6)
     add(pk.dialog.notebook, pgraph, label = message,
@@ -3702,6 +3879,7 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
     setPKCode(list(pkcall=call.command, pklist=call.final))
     currentPage <- svalue(pk.dialog.notebook)
     setDataSpecialPlot(boot.df, as.character(currentPage))
+    gtkProgressBarSetFraction(convert.bar, 0.9)
     
     ## plot n ------------- rank boostrap variability
     extract.var <- NULL
@@ -3743,9 +3921,11 @@ psn.bootstrap.vis.okButtonHandler = function(.,h,...)
           #{
           #    setDataSpecialPlot(var.plot, as.character(i))
           #})
-    
+    gtkProgressBarSetFraction(convert.bar, 1.0)
+    dispose(convertW)    
 }
 
+## Code modified from PsN
 psn.bootstrap.sum.okButtonHandler = function(.,h,...)
 {
    while (svalue(pk.dialog.notebook) > 1)
@@ -3768,12 +3948,24 @@ psn.bootstrap.sum.okButtonHandler = function(.,h,...)
 
     excl.id <- c()              # exclude samples that have this individual
 
-    ## autogenerated code ends
-
     ## read files
-    bootstrap.data <- read.csv(file1, header=T) # read.csv("raw_results1.csv", header=T)
-    incl.ids       <- read.csv(file2, header=F) # read.csv("included_individuals1.csv", header=F)
+    b.try1 <- try(bootstrap.data <- read.csv(file1, header=T)) # read.csv("raw_results1.csv", header=T)
+    in.try2 <- try(incl.ids <- read.csv(file2, header=F)) # read.csv("included_individuals1.csv", header=F)
 
+    if (inherits(b.try1, "try-error") || inherits(in.try2, "try-error"))
+    {
+        ErrorMessage("PsN result file or key file can NOT be read!")
+        return(invisible(NULL))
+    }
+
+    check.col <- c("minimization_successful", "covariance_step_successful",
+                   "covariance_step_warnings", "estimate_near_boundary")
+    if (!all(check.col %in% names(bootstrap.data))) 
+    {
+        ErrorMessage("PsN result file or key file can NOT be read!")
+        return(invisible(NULL))
+    }
+    
     ## replace underscores
     for (i in 1:length(names(bootstrap.data))) {
       names(bootstrap.data)[i] <- gsub("_", ".", names(bootstrap.data)[i])
@@ -4136,7 +4328,6 @@ com.hist.okButtonHandler = function(.,h,...)
         {
             lattice.list.3$x <-  as.formula(paste(lattice.list.3$x, "|", svalue(.$savewd[["cond"]]), sep=" "))
             lattice.list.3$layout <- as.numeric(c(svalue(.$savewd[["layout_x"]]), svalue(.$savewd[["layout_y"]])))
-
         }
         pgraph = ggraphics(ps=6)
         size(pgraph) <- c(getSubHeight()*0.5, getSubWidth()*0.5)
@@ -4144,9 +4335,30 @@ com.hist.okButtonHandler = function(.,h,...)
               override.closebutton = TRUE)
 
         print(call.final <- do.call(lattice.call3, lattice.list.3))
-        setPKCode(list(pkcall=call.command, pklist=call.final))
+        setPKCode(list(pkcall=lattice.call3, pklist=call.final))
         setPKGGobi(list(x=svalue(.$widgets[["x1"]]), y=svalue(.$widgets[["x2"]])))
     }
+    else
+    {
+        ggplot.call3 <- "ggplot2"
+
+        data3 <- currentData[,c(svalue(.$widgets[["x1"]]), svalue(.$widgets[["x2"]]))]
+        ggplot.txt1 <- "df <- data.frame(data3)"
+        ggplot.txt2 <- "df.m <- melt(df)"
+
+        ggplot.txt3 <- "ggplot(df.m) + geom_freqpoly(aes(x = value,
+               y = ..density.., colour = variable))"
+        ggplot.txt <- paste(ggplot.txt1, ggplot.txt2, ggplot.txt3, sep=";")
+
+        pgraph = ggraphics(ps=6)
+        size(pgraph) <- c(getSubHeight()*0.5, getSubWidth()*0.5)
+        add(pk.dialog.notebook, pgraph, label = message,
+              override.closebutton = TRUE)
+
+        print(call.final <- print(eval(parse(text=ggplot.txt))))
+        setPKCode(list(pkcall=ggplot.call3, pklist=call.final))
+        setPKGGobi(list(x=svalue(.$widgets[["x1"]]), y=svalue(.$widgets[["x2"]])))
+    }    
     
 }
 com.hist.okButtonHandler.0125 = function(.,h,...)

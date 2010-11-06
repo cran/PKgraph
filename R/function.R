@@ -177,6 +177,7 @@ pk.uni.menu <- function()
     )
     )
     BGTest$okButtonHandler = summary.uni.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler      
     BGTest$ggobiImageHandler = summary.uni.ggobiImageHandler
     BGTest$saveImageHandler = saveImageHandler
     BGTest$show()
@@ -206,7 +207,7 @@ pk.bi.menu <- function()
      main = list(type="gedit",text=" "),
      xlab = list(type="gedit",text=" "),
      ylab = list(type="gedit",text=" "),
-     type = list(type = "gdroplist", items = c("p", "l", "b")) #,
+     type = list(type = "gdroplist", items = c("p", "l", "b", "ts")) #,
      
     ),
        saveList = list(
@@ -218,6 +219,7 @@ pk.bi.menu <- function()
     )
     )
     BGTest$okButtonHandler = summary.bi.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = summary.bi.ggobiImageHandler
     BGTest$saveImageHandler = saveImageHandler
     BGTest$show()
@@ -256,6 +258,7 @@ pk.tri.menu <- function()
     )
     )
     BGTest$okButtonHandler = summary.tri.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = summary.tri.ggobiImageHandler
     BGTest$show()
 }
@@ -296,6 +299,7 @@ pk.time.menu <- function()
     )
     )
     BGTest$okButtonHandler = summary.bi.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = summary.bi.ggobiImageHandler
     BGTest$show()
 }
@@ -331,6 +335,7 @@ pk.para.menu <- function()
     )
     )
     BGTest$okButtonHandler = summary.para.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = summary.para.ggobiImageHandler
     BGTest$saveImageHandler = saveImageHandler
     BGTest$show()
@@ -363,6 +368,7 @@ pk.heat.menu <- function()
     )
     )
     BGTest$okButtonHandler = summary.heat.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$saveImageHandler = saveImageHandler
     #BGTest$ggobiImageHandler = summary.heat.ggobiImageHandler
     BGTest$show()
@@ -396,7 +402,8 @@ pk.matrix.menu <- function()
     )
     )
     BGTest$okButtonHandler = summary.matrix.okButtonHandler
-    
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler      
+        
     BGTest$datagroup = 0
     BGTest$saveImageHandler = saveImageHandler.matrix
     BGTest$ggobiImageHandler = summary.matrix.ggobiImageHandler
@@ -451,6 +458,7 @@ pk.model.ind <- function()
 
     )
     BGTest$okButtonHandler = model.ind.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = model.ggobiImageHandler
     BGTest$figureGroup = 1
     BGTest$saveImageHandler = saveImageHandler
@@ -517,6 +525,7 @@ pk.model.gof <- function()
 
     ))
         BGTest$okButtonHandler = model.gof.okButtonHandler
+        BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler              
         BGTest$ggobiImageHandler = model.ggobiImageHandler
         BGTest$saveImageHandler = saveImageHandler
        BGTest$show()
@@ -599,6 +608,7 @@ pk.model.struct <- function()
 
     ))
         BGTest$okButtonHandler = model.struct.okButtonHandler
+        BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler              
         BGTest$ggobiImageHandler = model.ggobiImageHandler
         BGTest$saveImageHandler = saveImageHandler
        BGTest$show()
@@ -675,6 +685,7 @@ pk.model.resid <- function()
 
     ))
         BGTest$okButtonHandler = model.resid.okButtonHandler
+        BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler              
         BGTest$ggobiImageHandler = model.ggobiImageHandler
         BGTest$saveImageHandler = saveImageHandler        
        BGTest$show()
@@ -728,6 +739,7 @@ pk.model.para <- function()
 
     ))
         BGTest$okButtonHandler = model.para.okButtonHandler
+        BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler              
         BGTest$ggobiImageHandler = model.ggobiImageHandler
         BGTest$saveImageHandler = saveImageHandler.pkmodel        
        BGTest$show()
@@ -782,6 +794,7 @@ pk.model.cov <- function()
 
     ))
         BGTest$okButtonHandler = model.cov.okButtonHandler
+        BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler              
         BGTest$ggobiImageHandler = model.ggobiImageHandler
         BGTest$saveImageHandler = saveImageHandler.pkmodel                
        BGTest$show()
@@ -822,6 +835,7 @@ pk.model.random <- function()
      graphics = list(type="gradio", items = c("lattice","ggplot2"), horizontal=TRUE)
     ))
         BGTest$okButtonHandler = model.random.okButtonHandler
+        BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler              
         BGTest$ggobiImageHandler = model.ggobiImageHandler
         BGTest$saveImageHandler = saveImageHandler.pkmodel                        
        BGTest$show()
@@ -850,7 +864,10 @@ pk.outlier.psn <- function()
                    "PsN Case deletion diagnostics:" = list(type="glabel", text=""),
                    "________________________________" = list(type="glabel", text=""),
                    "Result file:" = list(type = "gdroplist", items = c("", dir(pattern="csv"))),
-                   "Deleted ID file:" = list(type = "gdroplist", items = c("", dir(pattern="csv"))) #,
+                   "Note 1:" = list(type="glabel", text="raw_results1.csv (default file)"),
+                   "________________________________" = list(type="glabel", text=""),
+                   "Deleted ID file:" = list(type = "gdroplist", items = c("", dir(pattern="csv"))),
+                   "Note 2:" = list(type="glabel", text="skipped_individuals1.csv (default file)")                   
 
                    ) ,
                        saveList = list(
@@ -860,6 +877,7 @@ pk.outlier.psn <- function()
 
 
      BGTest$okButtonHandler = psn.outlier.okButtonHandler
+     BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler           
      BGTest$ggobiImageHandler = psn.outlier.ggobiImageHandler
 
      BGTest$datagroup = 0
@@ -900,6 +918,7 @@ pk.outlier.vis <- function()
 
 
      BGTest$okButtonHandler = vis.outlier.okButtonHandler
+     BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler           
      BGTest$ggobiImageHandler = vis.outlier.ggobiImageHandler
 
      BGTest$datagroup = 0
@@ -946,6 +965,7 @@ pk.boot.vis <- function()
 
 
      BGTest$okButtonHandler = psn.bootstrap.vis.okButtonHandler
+     BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler           
      BGTest$ggobiImageHandler = boot.vis.ggobiImageHandler
      BGTest$datagroup = 0
      BGTest$saveImageHandler = saveImageHandler
@@ -971,7 +991,11 @@ pk.boot.sum <- function()
     BGTest = BasicGUI$new(message="Bootstrap summary (PsN)",  # parent.win = PKW,
                       widgetList = list(
                    "PsN result file:" = list(type = "gdroplist", items = c(dir(pattern="csv"))),
+                   "Note 1:" = list(type="glabel", text="raw_results1.csv (default file)"),
+                   "________________________________" = list(type="glabel", text=""),                   
                    "Bootstrap key file:" = list(type = "gdroplist", items = c(dir(pattern="csv"))),
+                   "Note 2:" = list(type="glabel", text="included_individuals1.csv (default file)"),
+                   "________________________________" = list(type="glabel", text=""),                                                         
                    "number of bins" = list(type="gedit",text="")
 
                    ),
@@ -982,6 +1006,7 @@ pk.boot.sum <- function()
 
 
      BGTest$okButtonHandler = psn.bootstrap.sum.okButtonHandler
+     BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler           
      BGTest$ggobiImageHandler = psn.bootstrap.ggobiImageHandler
      BGTest$datagroup = 1
      BGTest$saveImageHandler = saveImageHandler
@@ -1028,6 +1053,7 @@ pk.sim <- function()
 
 
      BGTest$okButtonHandler = psn.sim.okButtonHandler
+     BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler           
      BGTest$ggobiImageHandler = validation.ggobiImageHandler
      BGTest$datagroup = 1
      BGTest$saveImageHandler = saveImageHandler
@@ -1080,7 +1106,11 @@ pk.com.map <- function()
           })
 
    configData = SimpleGUI$new(message="Configure mapping for model comparison",
-        widgetList = widget.list
+        widgetList = widget.list, 
+        note="Note: The goal of this step is to merge two data. 
+        Please choose data variables before fit.
+        Yes - ID/TIME/DV/Covariates
+        No - PRED/IPRED/WRES/Parameters" ## 1106
     )
 
     configData$okButtonHandler = com.map.okButtonHandler
@@ -1133,6 +1163,7 @@ pk.com.hist <- function()
     )
     )
     BGTest$okButtonHandler = com.hist.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = model.ggobiImageHandler
     BGTest$saveImageHandler = saveImageHandler
     BGTest$show()
@@ -1184,6 +1215,7 @@ pk.com.scatter <- function()
     )
     )
     BGTest$okButtonHandler = com.scatter.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = model.ggobiImageHandler
     BGTest$saveImageHandler = saveImageHandler
     BGTest$show()
@@ -1238,6 +1270,7 @@ pk.com.time <- function()
     )
     )
     BGTest$okButtonHandler = com.time.okButtonHandler
+    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
     BGTest$ggobiImageHandler = model.ggobiImageHandler
     BGTest$saveImageHandler = saveImageHandler
     BGTest$show()

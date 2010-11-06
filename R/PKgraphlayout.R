@@ -19,9 +19,10 @@ mbl = list(
 
       
         "Open data" = list(handler= openDataHandler, icon="open"),
-        "Save a file" = list(handler=saveHandler, icon="save-as"),
-        "Save a workspace" = list(handler=saveProjectHandler, icon="save"),
+        "Save data" = list(handler=saveHandler, icon="save-as"),
+        "Save workspace" = list(handler=saveProjectHandler, icon="save"),
         Sep = list(separator=TRUE),
+        "Clean data" = list(handler= cleanDataHandler, icon="open"),
         "Restore old workspace" = list(handler=restoreHandler, icon="revert-to-saved"),
         "Exit" =  list(handler=exitHandler, icon="quit")
     ),
@@ -104,7 +105,9 @@ tbl = list(
     open = list(handler=openDataHandler, icon="open"),
     preferences=list(handler=configFormatHandler, icon="preferences"),
     subset=list(handler=function(h,...) pk.subset(), icon="subset"),
+    clean = list(handler=cleanDataHandler, icon="clear"),    
      save = list(handler=saveHandler, icon="save"),
+     help = list(handler=helpHandler, icon="help"),
     quit = list(handler=exitHandler, icon="quit")
 
 )

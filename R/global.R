@@ -193,7 +193,33 @@
             setGGobiPlotType = function(typelist, dataname)  
             {
                 .ggobiPlotType[[dataname]] <<- typelist
-            }
+            },
+            
+            cleanAll = function()
+            {
+                .term <<- data.frame()
+                .datasets <<- list()
+                .dataType <<- list()    
+                .ggobiPlotType <<- list()    
+                    
+                .validateData <<- data.frame()
+            
+                .dataSpecialPlot <<- list()
+                .dataLayoutPlot <<- NULL
+            
+                ## model comparison
+                .comDataName <<- NULL
+                .comMap <<- data.frame()
+                
+                ## for interactive
+                .itDataName <<- NULL
+                .itMap <<- NULL 
+                
+                .pkcode <<- list()
+                .pkcodenote <<- list()
+                
+                .pkggobi <<- list()                               
+            }            
 
     )
     

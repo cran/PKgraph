@@ -31,12 +31,12 @@ PKgraph <- function()
   add(mainGroup, bottomGroup, expand=TRUE)
 
   assignInNamespace("pmg.dialog.notebook",
-                      gnotebook(closebuttons = TRUE,dontCloseThese = 1, tearable = FALSE),
+                      gnotebook(closebuttons = TRUE, tearable = FALSE),
                       "PKgraph")
   size(pmg.dialog.notebook) <- c(rightWidth*0.6, mainHeight*0.8)
 
   assignInNamespace("pmg.dialog.notebook2",
-                      gnotebook(closebuttons = TRUE,dontCloseThese = 1, tearable = FALSE),
+                      gnotebook(closebuttons = TRUE, tearable = FALSE),
                       "PKgraph")
   size(pmg.dialog.notebook2) <- c(rightWidth*0.6, mainHeight*0.8)
 
@@ -44,7 +44,7 @@ PKgraph <- function()
 
   assignInNamespace("pk.dirname", glabel(text=paste("Current directory: ", getwd())), "PKgraph")
   size(pk.dirname) <- c(rightWidth*0.3, mainHeight*0.05)
-  assignInNamespace("pk.dir", gtable(data.frame("Directory" = dir()), sort.columns = 1:2, expand=TRUE, handler=openDataHandler), "PKgraph")
+  assignInNamespace("pk.dir", gtable(as.character(dir()), sort.columns = 1:2, expand=TRUE, handler=openDataHandler), "PKgraph")
 
   leftpane=gpanedgroup(pk.dirname, pk.dir, horizontal=FALSE)
   pg = gpanedgroup(leftpane, rightpane)

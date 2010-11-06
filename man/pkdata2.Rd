@@ -1,11 +1,11 @@
-\name{pkdata}
-\alias{pkdata}
+\name{pkdata2}
+\alias{pkdata2}
 \docType{data}
-\title{Sample data 1 for PKgraph}
+\title{Sample data 2 for PKgraph}
 \description{
 A sample data from https://www.accp1.org.
 }
-\usage{data(pkdata)}
+\usage{data(pkdata2)}
 \format{
 
 }

@@ -61,18 +61,20 @@ libraries from
 \newline
 \newline
 2. Install RGtk2 (Please see RGtk2 Installation notes if you have problems) \newline
-a. Install R package, RGtk2: \textit{install.packages(``RGtk2'')} \newline \newline
+\textit{install.packages(``RGtk2'')} \newline \newline
 3. install rggobi   \newline
 a. Download and install ggobi (www.ggobi.org)  \newline
 b. Install rggobi: \textit{install.packages(``rggobi'')} \newline \newline
 4. Install gWidgets  \newline
-a. Install R package, gWidgets: \textit{install.packages(``gWidgets'')} \newline \newline
-5. Install gWidgetsRGtk2 \newline
-a. Install R package, gWidgetsRGtk2: \textit{install.packages(``gWidgetsRGtk2'')} \newline \newline
-6. Install lattice  \newline
-a. Install R package, lattice: \textit{install.packages(``lattice'')} \newline \newline
-7. Install ggplot2  \newline
-a. Install R package, lattice: \textit{install.packages(``ggplot2'')} \newline \newline
+\textit{install.packages(``gWidgets'')} \newline \newline
+5. Install cairoDevice \newline
+\textit{install.packages(``cairoDevice'')} \newline \newline
+6. Install gWidgetsRGtk2 \newline
+\textit{install.packages(``gWidgetsRGtk2'')} \newline \newline
+7. Install lattice  \newline
+\textit{install.packages(``lattice'')} \newline \newline
+8. Install ggplot2  \newline
+\textit{install.packages(``ggplot2'')} \newline \newline
 \section{PKgraph infrastructure}
 The software incorporates a key concept: interactive graphics to link various datasets and diagnostics plots. The framework is programmed using RGtk2 and consists of main formats of interfaces,
 (1) main, containing links to all parts of the software, and handles the basic data management, and links to diagnostic modules, and (2) graph, which provides tools specifically for each diagnostic module. (2). Basic module: data input/output module, configuration module, and data management module.
@@ -101,7 +103,7 @@ Selecting an item from a diagnostic module menu brings up a graph interface (Fig
 \newline
 \begin{itemize}
 	\item The parameter area setup allows choice of variable, plot labels, layout for trellis or facetted plots. A choice of lattice or ggplot2 graphics is provided.
-	\item The tool bar allows the plots to be saved, opening the plot in ggobi for interaction on the plot (\textit{ctrl + b} for brushing data), synchronize subset selection from ggobi to the data in R, and close ggobi.
+	\item The tool bar allows users to save plots, open plots for interactive graphics (\textbf{ctrl + b for brushing data}), display subset selection from ggobi, save subset selection from ggobi and close ggobi.
 	\item The plot area displays the figure, and multiple figures if more than one are created.
 \end{itemize}
 \begin{figure}[h!tb] \centering
@@ -132,6 +134,7 @@ This menu itme is in charge of input, output and save data. It has the following
 	\item \textit{Save a file}: save a file.
 	\item \textit{Save a workspace}: save a workspace for later usage. It generally saves a group of lists
 	for configuration and related data.
+	\item \textit{Clean data}: clean all loaded data.		
 	\item \textit{Restore old workspace}: restore the workspace from the data and list you saved from previous step.
 	\item \textit{Exit}: exit from PKgraph.
 \end{itemize}
@@ -143,13 +146,12 @@ This menu itme is in charge of input, output and save data. It has the following
 \subsection{Configure}
 This menu itme is utilized to configure PKgraph. It has the following functions (Figure~\ref{configure}),
 \begin{itemize}
+	\item \textit{Set data type}: set the ID, TIME, CONC variables for current PK data.
 	\item \textit{Set working directory}: change current directory.
 	\item \textit{Set saving format}: set up saving format for figures, including pdf, jpg, tiff, png
-  bmp, win.metafile, and figure width and height. If figure width and height is not setup, a default one
+  bmp, win.metafile, and figure width and height. If figure width and height is not configured, the default one
   will be used.
-	\item \textit{Save a workspace}: save a workspace for later usage. It generally saves a group of lists
-	for configuration and related data.
-	\item \textit{Set figure configuration}: color and loess can be setup here for figures.
+	\item \textit{Set figure configuration}: color and loess can be selected for figures.
 \end{itemize}
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{configure.pdf}
@@ -160,8 +162,7 @@ This menu itme is utilized to configure PKgraph. It has the following functions 
 This menu item is utilized to manage data. It has the following functions (Figure~\ref{data}),
 \begin{itemize}
 	\item \textit{Subset}: subset current data.
-	\item \textit{Factor}: factor categorical variables. Graphical packages require
-	variables to be factor type in order to display related symbol in figures.
+	\item \textit{Factor}: factor categorical variables. Graphical packages require the variable to be factor type in order to display the categorical symbol in figures.	
 \end{itemize}
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{data.pdf}
@@ -174,6 +175,7 @@ This menu item is utilized to explore data and screen patterns. It has the follo
 	\item \textit{Univariates}: plot univariate varaiables.
 	\item \textit{Bivariates}: plot bivariate variables.
 	\item \textit{Parallel coordinate plot}: Parallel coordinate plot for multivariate variables.
+	\item \textit{Scatterplot matrix}: Scatterplot matrix for multivariate variables.
 \end{itemize}
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{eda.pdf}
@@ -185,7 +187,8 @@ When clicking this menu item, users will generate a ``graph interface''(Figure~\
 \begin{itemize}
 	\item \textit{save}: save figures.
 	\item \textit{ggobi}: open the plot in ggobi for interaction on the plot.
-	\item \textit{ synchronize}: synchronize subset selection from ggobi to the data in R.
+	\item \textit{synchronize}: synchronize subset selection from ggobi to the data in R.
+	\item \textit{save synchronized data}: save synchronized subset.
 	\item \textit{close}: close ggobi.
 \end{itemize}
 \subsubsection{Bivariate}
@@ -198,7 +201,7 @@ This menu item is utilized to check model assumptions and goodness of fit. The g
 \begin{itemize}
 	\item \textit{Configure model result}: This is the key step to match data variables to default metric system. By this step, data from any platform (NONMEM, Monolix, SAS, R) can be interpreted graphically in figures.
 	\item \textit{Individual plots}: Bivariate plot for each individual.
-	\item \textit{Goodness of fit plots}: Goodness of fit plot is one of key tools to check model fitting. These kinds of plots will give an overall perspective of model performance, including scatter plot for concentration versus PRED, concentration versus IPRED, PRED versus time and IPRED versus time.
+	\item \textit{Basic goodness of fit plots}: Goodness of fit plot is one of key tools to check model fitting. These kinds of plots will give an overall perspective of model performance, including scatter plot for concentration versus PRED, concentration versus IPRED, PRED versus time and IPRED versus time.
 \item \textit{Parameters}: Generally, there are assumptions for distribution of parameters during modeling process. The histogram is utilized to check this distribution. In addition, the correlation of parameters has significant effect on modeling performance, and it can be checked by scatter plots or a scatterplot matrix.
 \item \textit{Random effects}: The assumptions for random effects also need to be tested for distribution and correlation by histogram, scatter plots or a scatterplot matrix.
 \item \textit{Structural model}: Structural model can be diagnosed by PRED versus concentration conditioned on time, IPRED versus concentration conditioned on time, WRES versus time, WRES versus PRED, PRED versus concentration conditioned on covariates, IPRED versus concentration conditioned on covariates.
@@ -210,11 +213,9 @@ This menu item is utilized to check model assumptions and goodness of fit. The g
 \caption{Menu items in \textit{PK models}}
 \label{pkmodel}
 \end{figure}
-Users have to configure data variable first before going to specific model diagnostics. To illustrate the usage of this menu item, I will use \textit{Configure model result} and \textit{Parameters} as examples.
-%%%%%%%%%%%%%%
+Users have to configure data variable first before going to specific model diagnostics. To illustrate the usage of this menu item, I will use two menu times: \textit{Configure model result} and \textit{Parameters} to demonstrate the model diagnostics.%%%%%%%%%%%%%%
 \subsubsection{Configure model result}
-The interface for this function is shown in Figure~\ref{pkmodel_config}. The fixed variables are from data, and the flexible variables are from default metric system (Table~\ref{c2_s3_t1}).
-\begin{figure}[h!tb] \centering
+The interface for this function is shown in Figure~\ref{pkmodel_config}. The fixed column is column name from data, and the selectable column is variable name from the default metric system (Table~\ref{c2_s3_t1}).\begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{pkmodel_config.pdf}
 \caption{\textit{Configure model result} in \textit{PK models}}
 \label{pkmodel_config}
@@ -238,8 +239,7 @@ COV & Covariates \\ \hline
 \end{table}
 %%%%%%%%%%%%%%
 \subsubsection{Parameters}
-The interface for this function is shown in Figure~\ref{pkmodel_para}. After users choose proper figures in the left window, the system will produce all figures automatically. Users can pick specific figures for diagnosing with functions in the toolbar.
-\begin{figure}[h!tb] \centering
+The interface for this function is shown in Figure~\ref{pkmodel_para}. After users choose proper parameters in the left window, the system will produce all figures automatically. Users can pick specific figures for diagnosing with functions in the toolbar.\begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{pkmodel_para.pdf}
 \caption{\textit{Parameters} in \textit{PK models}}
 \label{pkmodel_para}
@@ -272,10 +272,10 @@ This function is specifically for PsN \textit{cdd} results (Figure~\ref{infPsN})
 This function is to visualize data from case deletion diagnostics (multiple NONMEM runs). Let's use multiple NONMEM run form PsN (Figure~\ref{infCddData}), and find file directory for these runs. Then we can select parameters as shown in Figure~\ref{infCddPara}.  These parameters include:
 \begin{itemize}
 	\item \textit{Target directory path}: the path for multiple NONMEM runs. It is a required parameter.
-	\item \textit{Simulation folder pattern}: the common name style for multiple NONMEM runs. For this example, it is \textit{NM\_run}. It is a required parameter.
+	\item \textit{Simulation folder pattern}: the common folder name for multiple NONMEM runs. For this example, it is \textit{NM\_run}. It is a required parameter.
+	\item \textit{NONMEM result file name}: the file name for NONEM fitted result. In each NONMEM run, there should be a file with this name. It is required parameter.	
 	\item \textit{Patient ID}: the ID for each subject. It is a required parameter.
 	\item \textit{Plot variable}: the variable you use to detect difference among patients. For this example, we choose \textit{CL}. It is a required parameter.
-	\item \textit{xlabel}: the name label for each NONMEM run. It is optional.
 \end{itemize}
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{infCddData.pdf}
@@ -355,8 +355,7 @@ After mapping, a new dataset joining two fit results will show in data area of m
 All variable names for model 1 will have additional ``.x'' label, and all variable names for model 2 will have additional ``.y'' label.
 \newline
 \newline
-Let us look at ``histogram comparison'' as one example. First, we need to make sure that current data set is ``4\_ModelComparison'' (Figure~\ref{modelcc1}); second, we click ``histogram comparison''. To compare \textit{CL}, we select \textit{ISM (gender)} as the conditional variable, and the result is shown in (Figure~\ref{modelcc2}).
-\begin{figure}[h!tb] \centering
+Let us look at ``histogram comparison'' as one example. First, we need to make sure that current data set is ``4\_ModelComparison'' (Figure~\ref{modelcc1}); second, we click ``histogram comparison''. The result is shown in (Figure~\ref{modelcc2}) for comparing \textit{CL}.\begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{modelcc1.pdf}
 \caption{Current data set for \textit{Model comparison}}
 \label{modelcc1}
@@ -379,6 +378,12 @@ One dataset from NONMEM is utilized to demonstrate PKgraph. This data set has 10
 As a text file, the fitting result from NONMEM is imported into PKgraph for further investigation and analysis. In the ``open'' dialog, we set up file format for reading with default parameters, and as a result, the input data shows up on the right panel while a message, ``Data is loaded successfully'' appears in the status bar at bottom of panel.
 \newline
 \newline
+Alternatively, to make the input process flexible, users can input data into R first and then load data from ``Data from R environment'' in the ``open'' dialog. All the fitted results from a wide variety of software including NONMEM, SAS, etc can be loaded into this package.
+\begin{verbatim}
+> library(PKgraph)
+> data(pkdata)
+> PKgraph()
+\end{verbatim}
 To further explore data, first, we choose ``Bivariates'' from ``Exploratory Data Analysis'' located at menu bar to check the scatter plots of interested variables(Figure~\ref{c4_s2_5eda1}, Figure~\ref{c4_s2_5eda2}). The option ``cond'' from the functional model interface helps user to draw conditional plots to seek patterns for subgroups. Certainly, users can also select ``ggplot2'' graphic package with different taste of figure. Next, we can take advantage of interactive techniques to look at maximum concentration by clicking second image button on the right panel. This will start ggobi and load related data. GGobi includes two windows: console window and plot window. In order to link figures together, users need to open all interested figures by ``Display'' option in the menu bar. The following figure clearly shows that maximum concentration comes from male patients (value: 1). To look at these data in detail, we go back to the figure graphical user interface and click third image button to check selected data set in ggobi. The selected data set pops up and links to patient with ID: 55. We repeat the same procedure for other variables to check patterns.
 \begin{figure}[h!tb]
 \centering
@@ -424,7 +429,7 @@ Let's identify these influential cases with interactive graphics. Figure ~\ref{c
 In addition, we compare additive error model (2\_CS1\_IV1ESTFPDF.fit) with proportional error model (3\_ CS1\_IV1ESTFPDF.fit2) by ``model comparison'' function in the menu bar. By comparing the distribution of two models, Figure ~\ref{c4_s2_9} does not find significant difference between two models for CL. In addition, using gender as a conditional variable, we found first model always gave a higher peak value for both male and female.
 \begin{figure}[h!tb]
 \centering
-\includegraphics[scale=0.6]{c4_s2_9.pdf}
+\includegraphics[scale=0.6]{modelcc2.pdf}
 \caption{Histogram comparison for
 comparing distributions of CL from two models.}
 \label{c4_s2_9}
