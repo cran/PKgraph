@@ -28,7 +28,7 @@ mbl = list(
     ),
     
     Configure = list(
-        "Set data type" = list(handler= function(h,...) ggobiPlotType()),	
+        "Set data type" = list(handler= function(h,...) ggobiPlotType()),
         "Set working directory" = list(handler= configDirHandler),
         "Set saving format" = list(handler= configFormatHandler),
         "Set figure configuration" = list(handler= configFigureHandler)

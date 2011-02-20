@@ -36,14 +36,14 @@ The software described in this paper, PKgraph, provides a graphical user interfa
 PopPK model diagnosis with interactive graphics. It also provides an integrated and comprehensive platform for analysis
 of pharmacokinetic data including exploratory data analysis, goodness of model fit,
 model validation and model comparison. It can be used with a variety of modeling fitting software,
-including NONMEM, Monolix, SAS and R. PKGraph is programmed in R, and uses the R packages
+including NONMEM, Monolix, SAS and R. PKgraph is programmed in R, and uses the R packages
 lattice, ggplot2 for static graphics, and rggobi for interactive graphics. This R package is
 supported with a user-friendly graphical user interface so that users can easily control diagnosing
-with simple clicks. The PKGraph software serves as a supplement to the existing packages:
+with simple clicks. The PKgraph software serves as a supplement to the existing packages:
 NONMEM, Xpose and PsN for diagnosing models.
 \newline
 \newline
-PKgraph is a R packaged built on the following R packages: RGtk2, gWidgets, gWidgetsRGtk2,
+PKgraph is an R packaged built on the following R packages: RGtk2, gWidgets, gWidgetsRGtk2,
 lattice, and ggplot2. It requires R ($>$ 2.0) and  GTK+, and runs under Windows, Linux and Mac.
 \section{Installation}
 PKgraph needs to install the following programs and R packages:
@@ -77,7 +77,7 @@ b. Install rggobi: \textit{install.packages(``rggobi'')} \newline \newline
 \textit{install.packages(``ggplot2'')} \newline \newline
 \section{PKgraph infrastructure}
 The software incorporates a key concept: interactive graphics to link various datasets and diagnostics plots. The framework is programmed using RGtk2 and consists of main formats of interfaces,
-(1) main, containing links to all parts of the software, and handles the basic data management, and links to diagnostic modules, and (2) graph, which provides tools specifically for each diagnostic module. (2). Basic module: data input/output module, configuration module, and data management module.
+(1) main, containing links to all parts of the software, and handles the basic data management, and links to diagnostic modules, and (2) graph, which provides tools specifically for each diagnostic module. 
 \newline
 \newline
 \subsection{Graphical user interfaces}
@@ -102,8 +102,15 @@ Selecting an item from a diagnostic module menu brings up a graph interface (Fig
 \newline
 \newline
 \begin{itemize}
-	\item The parameter area setup allows choice of variable, plot labels, layout for trellis or facetted plots. A choice of lattice or ggplot2 graphics is provided.
-	\item The tool bar allows users to save plots, open plots for interactive graphics (\textbf{ctrl + b for brushing data}), display subset selection from ggobi, save subset selection from ggobi and close ggobi.
+	\item The parameter area setup allows choice of variable, plot labels, layout for trellis or facetted plots. A choice of lattice or ggplot2 graphics is provided.  Note: At the bottom of this area, there is a module called ``command area'', which is for next release. It is not fully functional at this point.
+	\item The tool bar allows users to 1) save plots, 2) open plots for interactive graphics (\textbf{ctrl + b for brushing data}), 3) display subset selection from ggobi, 4) save subset selection from ggobi and 5) close ggobi.
+		\begin{itemize}
+			\item save plots: this button can save the current plot from \textbf{plot area}. The figure can be saved as pdf, jpg, tiff, png formats. This format is configured by \textit{Set saving format} in the \textit{Configure} menu item. For multiple plots generated with one parameter set, such as plots for observation concentration versus time conditioned on 50 patients, R will only keep the last few patients as one page in the \textbf{plot area}. This button will automatically save all pages for all patients with the specified figure format.
+			\item open plots for interactive graphics: this button opens two plots in ggobi for interactive graphics. The first plot is a time series plot for this data (observed concentration versus time), and the second plot is the current plot from \textbf{plot area}. These two plots are linked by patient ID. A specific feature of interactive graphics is to explore data by brushing. In the ggobi, users can use \textbf{ctrl + b for brushing data} to link two plots. For those who would like to use more advanced features of interactive graphics, ggobi manual is a good resource (http://www.ggobi.org/).
+			\item display subset selection from ggobi: this button helps user to visualize and analyze the brushed data from the previous step: \textit{ open plots for interactive graphics}. The brushed data is shown as a new dialog.
+			\item save subset selection from ggobi: this buttons save all brushed data from previous step: \textit{open plots for interactive graphics}, \textit{ display subset selection from ggobi}. 
+			\item close ggobi: close all related ggobi instances.
+		\end{itemize}
 	\item The plot area displays the figure, and multiple figures if more than one are created.
 \end{itemize}
 \begin{figure}[h!tb] \centering
@@ -124,10 +131,87 @@ Functional module matches the menu items in PKgraph toolbar. It includes the fol
 	\item Interactive graphics
 \end{itemize}
 In the next sections, I will go through each menu item in detail.
-\section{Functions}
-In this section, I will go through each function in the menu item of toolbar.
+\section{Quick start}
+PKgraph targets audiences working in population pharmacokinetics models,
+and particularly those professionals who have only basic knowledge of R.
+\subsection{Input data}
+\subsubsection{data.frame}
+PKgraph accepts one type of input data: data.frame. It can be model fit results from NONMEM, Monolix, SAS or R. This data.frame should include ID, time, observed concentration, individual predicated concentration, population predicted concentration, residuals, weighted residuals, parameters, random effects, etc. Details are as follows. Note: Abbreviated terms are explained in Table~\ref{tnew_function_1}.
+\begin{itemize}
+	\item Exploratory data analysis: ID, Time, CONC 
+	\item PK models: See details in Table~\ref{c2_s3_t12}. 
+	\item Model comparison: ID, Time, CONC, and interested variables from fit results, such as WRES, IPRE, etc. For this module, two data.frames come from two model fit results are required.
+\end{itemize}
+Dependent on the modeling software, users need to convert the model fit results to this single data.frame. After that, PKgraph can read in and diagnose the model fit results. For NONMEM, the \textit{tab} file can be considered as this single data.frame, and read in R directly. For Monolix, there are a few output files, and users have to combine them as one single file, including all the interested variables.
+\newline
+\newline
+An sample data from NONMEM,
+\begin{verbatim}
+> library(PKgraph)
+> data(pkdata)
+\end{verbatim}
+\subsubsection{NONMEM folders}
+For model validation, PKgraph accepts two kinds of model validation data: 1) results from PsN; 2) results from multiple NONMEM runs. For the first type of data, PsN has the following functions: bootstrap, case deletion and stochastic simulation. PKgraph provides the graphic ability to visualize the final results from PsN. For the second type of data, PKgraph can handle multiple NONMEM run folders and extract useful information to visualize.
+Please see details in \textbf{Model validation}.
+\subsection{Diagnose model}
+There are eight function menu items in the \textbf{main interface}. 
+Each matches a functional module. They can be considered as two categories: 
+\textbf{basic} and \textbf{diagnostic} modules. 
+The basic module includes ``Project'', ``Configure'', ``Data management'' menu items, 
+and the diagnostic module includes ``Exploratory data analysis'', ``PK model'', 
+``Model validation'', ``Model comparison'', ``Interactive graphics'' menu items. 
+The five menu items in the diagnostic module can be utilized separately.  
+\newline
+\newline
+The basic module is utilized to read in data, configure data and manage data. The diagnostic module aims to test assumptions of population pharmacokinetic models. Please see the following section for details.
+\newline
+\newline
+The workflow of diagnosing models is as follows, 
+
+\subsection{Basic graphical parameters}
+In PKgraph, we use a lot of popular arguments from R graphics. Here is the explanation. For those who want to know more about these parameters, please check R manual.
+\begin{table}[h!tb] \centering
+\begin{tabular}{l l} \hline
+\textbf{ Abbreviated terms} & \textbf{Description}  \\ \hline
+main & main title of the plot. It is the argument in R functions.\\
+xlab/ylab & label of the x/y axis. It is the argument in R functions. \\
+type & what type of plot should be drawn \\
+layout\_x & the number of columns in a multi panel display \\
+layout\_y & the number of rows in a multi panel display \\
+cond & conditional variable \\
+loess/lowess & locally weighted scatterplot smoothing \\
+\hline
+\end{tabular}
+\caption{Basic graphical parameters}
+\label{tnew_function_2}
+\end{table}
+
+\subsection{Abbreviations in the software}
+\begin{table}[h!tb] \centering
+\begin{tabular}{l l} \hline
+\textbf{ Abbreviated terms} & \textbf{Description}  \\ \hline
+ID & Patient ID \\
+TIME & Time after dose \\
+CONC & Observed concentration of drug in the body \\
+PRED & Population predicted concentration \\
+RES & Residual \\
+WRES & Weighted residual \\
+IPRED & individual predicted concentration \\
+IWRES & Individual weighted residual \\
+COV & Covariates \\ 
+DV & Dependent variables (Usually observed concentration) \\
+IDV & Independent variables (Usually time) \\
+\hline
+\end{tabular}
+\caption{Abbreviated terms}
+\label{tnew_function_1}
+\end{table}
+The abbreviated variables used in the software are listed as Table~\ref{tnew_function_1}.
+
+\section{Menu items in main interface}
+In this section, I will go through each function in the menu items of toolbar.
 \subsection{Project}
-This menu itme is in charge of input, output and save data. It has the following functions (Figure~\ref{project}),
+This menu item is in charge of input, output and save data. It has the following functions (Figure~\ref{project}),
 \begin{itemize}
 	\item \textit{Open data}: open modeling fit result from NONMEM, Monolix, SAS, R or other software.
   It has options to setup the data format, start line and separation symbol.
@@ -146,12 +230,14 @@ This menu itme is in charge of input, output and save data. It has the following
 \subsection{Configure}
 This menu itme is utilized to configure PKgraph. It has the following functions (Figure~\ref{configure}),
 \begin{itemize}
-	\item \textit{Set data type}: set the ID, TIME, CONC variables for current PK data.
-	\item \textit{Set working directory}: change current directory.
+	\item \textit{Set data type}: set the ID, TIME, CONC variables for current PK data. This configuration is used for integrative graphics to draw a time series plot automatically.
+	\item \textit{Set working directory}: change current working directory in R.
 	\item \textit{Set saving format}: set up saving format for figures, including pdf, jpg, tiff, png
-  bmp, win.metafile, and figure width and height. If figure width and height is not configured, the default one
-  will be used.
-	\item \textit{Set figure configuration}: color and loess can be selected for figures.
+  bmp, win.metafile, and figure width and height. If figure width and height is not 
+  configured, the default one will be used. 
+  Note: to save figure in \textbf{graph interface}, users need to configure this menu 
+  first. 
+  \item \textit{Set figure configuration}: color and loess can be selected for figures.
 \end{itemize}
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{configure.pdf}
@@ -161,8 +247,14 @@ This menu itme is utilized to configure PKgraph. It has the following functions 
 \subsection{Data management}
 This menu item is utilized to manage data. It has the following functions (Figure~\ref{data}),
 \begin{itemize}
-	\item \textit{Subset}: subset current data.
-	\item \textit{Factor}: factor categorical variables. Graphical packages require the variable to be factor type in order to display the categorical symbol in figures.	
+	\item \textit{Subset}: subset current data. After this, a new subset data will generate in the \textbf{data area} of \textbf{main interface}. And it will be the current working data for the following diagnosis. If users do not want to work on this data, users can click the tab of \textbf{data area} and select the proper one as the current working data.
+	\item \textit{Factor}: factor categorical variables. 
+	Graphical packages require the variable to be factor type in order to 
+	display the categorical symbol in figures.	
+	For example, in Figure~\ref{modelcc2}, after we make the ``ISM'' as a factor, 
+	the symbol ``0/1'' is show as the subtitle on the figure; otherwise, 
+	the name of variable ``ISM''
+	will be shown instead.
 \end{itemize}
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{data.pdf}
@@ -170,9 +262,11 @@ This menu item is utilized to manage data. It has the following functions (Figur
 \label{data}
 \end{figure}
 \subsection{Exploratory data analysis}
-This menu item is utilized to explore data and screen patterns. It has the following functions (Figure~\ref{eda}),
+This menu item is utilized to explore data and screen patterns. 
+The explanation for the basic parameter set is available at section: \textbf{Basic graphical parameters}.
+It has the following functions (Figure~\ref{eda}),
 \begin{itemize}
-	\item \textit{Univariates}: plot univariate varaiables.
+	\item \textit{Univariates}: plot univariate varaiables. 
 	\item \textit{Bivariates}: plot bivariate variables.
 	\item \textit{Parallel coordinate plot}: Parallel coordinate plot for multivariate variables.
 	\item \textit{Scatterplot matrix}: Scatterplot matrix for multivariate variables.
@@ -183,39 +277,29 @@ This menu item is utilized to explore data and screen patterns. It has the follo
 \label{eda}
 \end{figure}
 \subsubsection{Univariate}
-When clicking this menu item, users will generate a ``graph interface''(Figure~\ref{c4_s2_2}). In this interface, users can specify all parameters in the left area of window. In the right area of window, it has the following four buttons on the top:
-\begin{itemize}
-	\item \textit{save}: save figures.
-	\item \textit{ggobi}: open the plot in ggobi for interaction on the plot.
-	\item \textit{synchronize}: synchronize subset selection from ggobi to the data in R.
-	\item \textit{save synchronized data}: save synchronized subset.
-	\item \textit{close}: close ggobi.
-\end{itemize}
+When clicking this menu item, users will generate a 
+\textbf{graph interface}(Figure~\ref{c4_s2_2}). In this interface, users can 
+specify all parameters in the left area of window. In the right area of window, 
+it has five buttons on the top explained in section: \textbf{Graph interface}.
 \subsubsection{Bivariate}
 This menu item also generates a ``graph interface''. It is similar to the Univariate interface, except that users will have two variables instead of one.
 \subsubsection{Parallel coordinate plots}
-This menu item provides access to lattice function: \textit{parallel} function from lattice package.
+This menu item provides access to \textit{parallel} function from lattice package.
+\subsubsection{Scatterplot matrix}
+This menu item provides access to \textit{splom} function from lattice package.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{PK models}
-This menu item is utilized to check model assumptions and goodness of fit. The guideline follows Census menu (http://census.sourceforge.net/). It has the following functions (Figure~\ref{pkmodel}),
-\begin{itemize}
-	\item \textit{Configure model result}: This is the key step to match data variables to default metric system. By this step, data from any platform (NONMEM, Monolix, SAS, R) can be interpreted graphically in figures.
-	\item \textit{Individual plots}: Bivariate plot for each individual.
-	\item \textit{Basic goodness of fit plots}: Goodness of fit plot is one of key tools to check model fitting. These kinds of plots will give an overall perspective of model performance, including scatter plot for concentration versus PRED, concentration versus IPRED, PRED versus time and IPRED versus time.
-\item \textit{Parameters}: Generally, there are assumptions for distribution of parameters during modeling process. The histogram is utilized to check this distribution. In addition, the correlation of parameters has significant effect on modeling performance, and it can be checked by scatter plots or a scatterplot matrix.
-\item \textit{Random effects}: The assumptions for random effects also need to be tested for distribution and correlation by histogram, scatter plots or a scatterplot matrix.
-\item \textit{Structural model}: Structural model can be diagnosed by PRED versus concentration conditioned on time, IPRED versus concentration conditioned on time, WRES versus time, WRES versus PRED, PRED versus concentration conditioned on covariates, IPRED versus concentration conditioned on covariates.
-\item \textit{Residual error model}: Two assumptions are related to this submodel: 1) homoscedastic variability; 2) symmetrically distributed residuals. To test these assumptions, we applied the following techniques: 1) histogram for distributions of WRES; 2) histogram for individual distribution of WRES; 3) scatterplot of $|$WRES$|$ versus PRED to check the shape of residual; 4) scatterplot of $|$WRES$|$ versus PRED conditioned on covariates to screen the covariate effects; 5) autocorrelation of WRES.
-\item \textit{Covariate model}: Parameters, ETA and WRES are of great use to help screen proper covariates. We can utilize the following methods to check covariate models: 1) scatter plot for parameters versus covariates, ETAs versus covariates, WRES versus covariates; 2) scatterplot matrix of covariates.
-\end{itemize}
+This menu item is utilized to check model assumptions and goodness of fit. The guideline follows Census menu (http://census.sourceforge.net/). It has the eight functions (Figure~\ref{pkmodel}). \textbf{ Configure model result} is required for the other seven functions. 
+Users have to configure data variable first before going to specific model diagnostics.
 \begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{pkmodel.pdf}
 \caption{Menu items in \textit{PK models}}
 \label{pkmodel}
 \end{figure}
-Users have to configure data variable first before going to specific model diagnostics. To illustrate the usage of this menu item, I will use two menu times: \textit{Configure model result} and \textit{Parameters} to demonstrate the model diagnostics.%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%
 \subsubsection{Configure model result}
-The interface for this function is shown in Figure~\ref{pkmodel_config}. The fixed column is column name from data, and the selectable column is variable name from the default metric system (Table~\ref{c2_s3_t1}).\begin{figure}[h!tb] \centering
+This is the key step to match data variables to default metric system. By this step, fit results from any platform (NONMEM, Monolix, SAS, R) can be interpreted graphically in figures.
+\begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{pkmodel_config.pdf}
 \caption{\textit{Configure model result} in \textit{PK models}}
 \label{pkmodel_config}
@@ -226,28 +310,80 @@ The interface for this function is shown in Figure~\ref{pkmodel_config}. The fix
 \textbf{Package variable} & \textbf{Description}  \\ \hline
 ID & Patient ID \\
 TIME & Time after dose \\
-CONC & The concentration of drug in the body \\
-PRED & Prediction generated from model fitting \\
+CONC & Observed concentration of drug in the body \\
+PRED & Population predicted concentration \\
 RES & Residual \\
 WRES & Weighted residual \\
-IPRED & Individual prediction \\
+IPRED & individual predicted concentration \\
 IWRES & Individual weighted residual \\
-COV & Covariates \\ \hline
+COV & Covariates \\ 
+DV & Dependent variables \\
+IDV & Independent variables \\
+\hline
 \end{tabular}
 \caption{Package metric system}
 \label{c2_s3_t1}
 \end{table}
+\newline
+\newline
+The interface for this function is shown in Figure~\ref{pkmodel_config}. The fixed column (left) is column name from data, and the selectable column (right) is variable name from the default metric system (Table~\ref{c2_s3_t1}). By this matching, the other seven functions can be performed. However, these functions work independently, and some variables in the default metric system must be matched to those in real data (Table~\ref{c2_s3_t12}).
+
+\begin{table}[h!tb] \centering
+\begin{tabular}{ll} \hline
+\textbf{Functions} & \textbf{Required items to be selected in right column}  \\ \hline
+\textbf{Individual plots} & ID \\
+\textbf{Basic goodness of fit plots} & PRED, IPRE, DV, IDV, WRES \\
+\textbf{Parameters} & PARAMETERS \\
+\textbf{Structural model} & PRED, IPRE, DV, IDV, WRES, COV \\
+\textbf{Residual error model} & WRES, PRED, COV, IPRE \\
+\textbf{Covariate model} & PARAMETERS, ETA, WRES, COV \\
+\textbf{Random effects} & ETA \\
+\hline
+\end{tabular}
+\caption{Required variables for different functions}
+\label{c2_s3_t12}
+\end{table}
+%%%%%%%%%%%%%%
+\subsubsection{Individual plots}
+Bivariate plot for each individual.
+\subsubsection{Basic goodness of fit plots}
+Goodness of fit plot is one of key tools to check model fitting. 
+These kinds of plots will give an overall perspective of model performance, 
+including scatter plot for concentration versus PRED, concentration versus IPRED, 
+PRED versus IDV (time) and IPRED versus IDV (time).
 %%%%%%%%%%%%%%
 \subsubsection{Parameters}
+Generally, there are assumptions for distribution of parameters during modeling process. The histogram is utilized to check this distribution. In addition, the correlation of parameters has significant effect on modeling performance, and it can be checked by scatter plots or a scatterplot matrix.
+\newline
+\newline
 The interface for this function is shown in Figure~\ref{pkmodel_para}. After users choose proper parameters in the left window, the system will produce all figures automatically. Users can pick specific figures for diagnosing with functions in the toolbar.\begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{pkmodel_para.pdf}
 \caption{\textit{Parameters} in \textit{PK models}}
 \label{pkmodel_para}
 \end{figure}
+%%%%%%%%%%%%%%
+\subsubsection{Random effects}
+The assumptions for random effects also need to be tested for distribution and correlation by histogram, scatter plots or a scatterplot matrix.
+%%%%%%%%%%%%%%
+\subsubsection{Structural model}
+Structural model can be diagnosed by PRED versus concentration conditioned on time, IPRED versus concentration conditioned on time, WRES versus time, WRES versus PRED, PRED versus concentration conditioned on covariates, IPRED versus concentration conditioned on covariates.
+%%%%%%%%%%%%%%
+\subsubsection{Residual error model}
+Two assumptions are related to this submodel: 1) homoscedastic variability; 2) symmetrically distributed residuals. To test these assumptions, we applied the following techniques: 1) histogram for distributions of WRES; 2) histogram for individual distribution of WRES; 3) scatterplot of $|$WRES$|$ versus PRED to check the shape of residual; 4) scatterplot of $|$WRES$|$ versus PRED conditioned on covariates to screen the covariate effects; 5) autocorrelation of WRES.
+%%%%%%%%%%%%%%
+\subsubsection{Covariate model}
+Parameters, ETA and WRES are of great use to help screen proper covariates. We can utilize the following methods to check covariate models: 1) scatter plot for parameters versus covariates, ETAs versus covariates, WRES versus covariates; 2) scatterplot matrix of covariates.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Model validation}
-Resampling methods has been extensively employed in the model validation. Currently, bootstrap targets for confidence interval, case deletion diagnostics identify influential cases, and stochastic simulation is utilized to compare models (PsN).
-PKgraph mainly focuses on case deletion diagnostics and bootstrap. It provides the following functions (Figure~\ref{modelv}),
+Resampling methods has been extensively employed in the model validation. Currently, bootstrap targets for confidence interval, case deletion diagnostics identify influential cases, and stochastic simulation is utilized to compare models.
+PKgraph mainly focuses on case deletion diagnostics and bootstrap. 
+\newline
+\newline
+It accepts two kinds of model validation data: 1) results from PsN; 2) results from multiple NONMEM runs. For the first type of data, PsN has the following functions: bootstrap, case deletion and stochastic simulation. PKgraph provides the graphic ability to visualize the final results from PsN. For the second type of data, PKgraph can handle multiple NONMEM run folders and extract useful information to visualize. \newline
+\newline
+\newline
+It provides the following functions (Figure~\ref{modelv}),
 \begin{itemize}
 	\item \textit{Influence analysis summary (PsN)}: analyze PsN \textit{cdd} results.
 	\item \textit{Visualization for influence analysis}: apply parallel coordinate plots and multidimensional scaling to visualize data from case deletion diagnostics (multiple NONMEM runs).
@@ -269,7 +405,7 @@ This function is specifically for PsN \textit{cdd} results (Figure~\ref{infPsN})
 \end{figure}
 %%%%%%%%%%%%%%
 \subsubsection{Visualization for influence analysis}
-This function is to visualize data from case deletion diagnostics (multiple NONMEM runs). Let's use multiple NONMEM run form PsN (Figure~\ref{infCddData}), and find file directory for these runs. Then we can select parameters as shown in Figure~\ref{infCddPara}.  These parameters include:
+This function is to visualize data from case deletion diagnostics (multiple NONMEM runs). Let's use multiple NONMEM run form PsN directly (Figure~\ref{infCddData}), and find file directory for these runs. Then we can select parameters as shown in Figure~\ref{infCddPara}.  These parameters include:
 \begin{itemize}
 	\item \textit{Target directory path}: the path for multiple NONMEM runs. It is a required parameter.
 	\item \textit{Simulation folder pattern}: the common folder name for multiple NONMEM runs. For this example, it is \textit{NM\_run}. It is a required parameter.
@@ -320,8 +456,7 @@ This function is to visualize data from boostrap (multiple NONMEM runs). Let's u
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Model comparison}
-In this process, there are three main steps: 1) select datasets; 2) configure mapping; 3) comparison (Figure~\ref{modelc}). The first step is to select datasets for comparison. Currently the program only supports comparison of two models. Then users proceed to configure mapping by matching column names or variable names from two data sets. These matching variables are generally the variables from original data sets and they are not related to model fitting. When all parameters are set, the program offers three choices for comparison: ``histogram comparison'' (distribution comparison), ``scatter plot comparison'' and ``transform comparison''.
-\begin{figure}[h!tb] \centering
+In this process, there are three main steps: 1) select datasets; 2) configure mapping; 3) comparison (Figure~\ref{modelc}). The first step is to select datasets for comparison. Currently the program only supports comparison of two models. Then users proceed to configure mapping by matching column names or variable names from two data sets. These matching variables are generally the variables from original data sets and they are not related to model fitting. For example, we have to match TIME, ID, CONC, WT, etc from original data, but not match those variables from model fit, such as ETA, RES, WRES, etc. When all parameters are set, the program offers three choices for comparison: ``histogram comparison'' (distribution comparison), ``scatter plot comparison'' and ``transform comparison''.\begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{modelc.pdf}
 \caption{Menu items in \textit{Model comparison}}
 \label{modelc}
@@ -349,7 +484,7 @@ After mapping, a new dataset joining two fit results will show in data area of m
 \end{figure}
 %%%%%%%%%%%%%%%
 \subsubsection{Comparison}
-``histogram comparison'' enables to compare distributions of matching parameters from two models. ``scatter plot comparison''  provides a environment to compare matching parameters by scatter plot. ``transform comparison''  transforms data by ratio or log ratio in order to visualize the difference between variables from two models. All these models can be linked directly to ggobi for interactive diagnostics by clicking second button in the tool bar area on the top right panel.
+``histogram comparison'' enables to compare distributions of matching parameters from two models. ``scatter plot comparison''  provides an environment to compare matching parameters by scatter plot. ``transform comparison''  transforms data by ratio or log ratio in order to visualize the difference between variables from two models. All these models can be linked directly to ggobi for interactive diagnostics by clicking second button in the tool bar area on the top right panel.
 \newline
 \newline
 All variable names for model 1 will have additional ``.x'' label, and all variable names for model 2 will have additional ``.y'' label.
@@ -370,7 +505,7 @@ Let us look at ``histogram comparison'' as one example. First, we need to make s
 This functional module incorporates a unique feature: interactive graphics into every step of model diagnostics. It targets to link diverse data sets in one integrative platform. Users can have access to this feature through \textit{ggobi} button in the graph interface. In addition, users have flexibility to apply this feature to achieve their specific goals. In the toolbar, there is option: \textit{interactive graphics}, designed for this purpose. It includes three steps: select datasets; configure mapping; and diagnostics. By linking diverse data sets with a key variable, users can seek patterns by brushing, linking and diagnosing patterns conveniently.
 \newline
 \newline
-In ggobi, the main operation for brushing data is \textit{ctrl + b}. By moving the brushing rectangle, the users can select interesting subsets in ggobi. More information is available in http:\\www.ggobi.org if needed.
+In ggobi, the main operation for brushing data is \textit{ctrl + b}. By moving the brushing rectangle, the users can select interesting subsets in ggobi. More information is available at \texttt{http:\\www.ggobi.org} if needed.
 \section{Example}
 One dataset from NONMEM is utilized to demonstrate PKgraph. This data set has 100 patients with covariates: ISM (gender), AGE, and WT. The data is fitted with one compartment model with zero order absorption and first order elimination.
 \newline
@@ -384,6 +519,15 @@ Alternatively, to make the input process flexible, users can input data into R f
 > data(pkdata)
 > PKgraph()
 \end{verbatim}
+\begin{figure}[h!tb]
+\centering
+\includegraphics[scale=0.6]{inputData.pdf}
+\caption{Load default data from ``Open'' dialog. After loading data with ``data(pkdata)'', users can select ``pkdata'' from Data from R environment in the ``Open'' dialog.}
+\label{inputData}
+\end{figure}
+Figure~\ref{inputData} demonstrates how to load default data in the software.
+\newline
+\newline
 To further explore data, first, we choose ``Bivariates'' from ``Exploratory Data Analysis'' located at menu bar to check the scatter plots of interested variables(Figure~\ref{c4_s2_5eda1}, Figure~\ref{c4_s2_5eda2}). The option ``cond'' from the functional model interface helps user to draw conditional plots to seek patterns for subgroups. Certainly, users can also select ``ggplot2'' graphic package with different taste of figure. Next, we can take advantage of interactive techniques to look at maximum concentration by clicking second image button on the right panel. This will start ggobi and load related data. GGobi includes two windows: console window and plot window. In order to link figures together, users need to open all interested figures by ``Display'' option in the menu bar. The following figure clearly shows that maximum concentration comes from male patients (value: 1). To look at these data in detail, we go back to the figure graphical user interface and click third image button to check selected data set in ggobi. The selected data set pops up and links to patient with ID: 55. We repeat the same procedure for other variables to check patterns.
 \begin{figure}[h!tb]
 \centering

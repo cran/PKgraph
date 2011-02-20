@@ -115,6 +115,26 @@ ggobiPlotType <- function()
         
       cline <- 0
       tbl.list <- list()
+      tbl.list[[1]] = gdroplist(items=colnames(getCurrentData(currentMain)))
+      tbl.list[[2]] = gdroplist(items=colnames(getCurrentData(currentMain)))
+      tbl.list[[3]] = gdroplist(items=colnames(getCurrentData(currentMain)))
+
+      name.order <- colnames(getCurrentData(currentMain))
+      if (length(getGGobiPlotType()) != 0)
+      {
+          current.list <- getGGobiPlotType(currentMain)
+          if (length(current.list) > 0)
+          {
+              ID.index <- match(current.list$ID, name.order)
+              tbl.list[[1]] <- gdroplist(items=c(name.order[c(ID.index)], name.order[-ID.index]))
+              Time.index <- match(current.list$Time, name.order)
+              tbl.list[[2]] <- gdroplist(items=c(name.order[c(Time.index)], name.order[-Time.index]))
+              Conc.index <- match(current.list$Conc, name.order)
+              tbl.list[[3]] <- gdroplist(items=c(name.order[c(Conc.index)], name.order[-Conc.index]))
+          }
+
+      }
+      
       dataname <- c("ID variable:", "Time variable:", "Concentration variable:")
       
       for (i in 1: length(dataname))
@@ -123,7 +143,7 @@ ggobiPlotType <- function()
 
           tbl[cline, 1, anchor = c(-1,-1)] = dataname[i]
 
-          tbl.list[[i]] = gdroplist(items=colnames(getCurrentData()))	
+          #tbl.list[[i]] = gdroplist(items=colnames(getCurrentData()))
           tbl[cline, 2, anchor = c(-1,-1)] = tbl.list[[i]]
 
       }
@@ -806,7 +826,7 @@ subset.okButtonHandler = function(., h,...)
                   pkmain.add(ptable, as.character(thisDataName), override.closebutton = TRUE)
 
                   dispose(gwin.subset)
-
+                  svalue(PKENV$pmg.statusBar) <- "Subset sucessfully!"
            })
 }
 

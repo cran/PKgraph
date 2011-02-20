@@ -439,30 +439,33 @@ pk.model.ind <- function()
    all.items <- colnames(getCurrentData(currentMain))
    id.ind <- which(require.term==all.items)
    ind.items <- all.items[-id.ind]
-   
-   BGTest = BasicGUI$new(message="PK individual plot",
-        widgetList = list(
-     x = list(type = "gdroplist", items = c("", ind.items)),
-     y = list(type = "gdroplist", items = c("", ind.items)),
-     main = list(type="gedit",text=""),
-     xlab = list(type="gedit",text=""),
-     ylab = list(type="gedit",text=""),
-     type = list(type = "gdroplist", items = c("p", "l", "b"))
-     ),
 
-        saveList = list(
-     layout_x = list(type="gedit",text="5"),
-     layout_y = list(type="gedit", text="5") ,
-     graphics = list(type="gradio", items = c("lattice","ggplot2"), horizontal=TRUE)
-                        )
+   if (!config.check)
+   {
+       BGTest = BasicGUI$new(message="PK individual plot",
+            widgetList = list(
+         x = list(type = "gdroplist", items = c("", ind.items)),
+         y = list(type = "gdroplist", items = c("", ind.items)),
+         main = list(type="gedit",text=""),
+         xlab = list(type="gedit",text=""),
+         ylab = list(type="gedit",text=""),
+         type = list(type = "gdroplist", items = c("p", "l", "b"))
+         ),
 
-    )
-    BGTest$okButtonHandler = model.ind.okButtonHandler
-    BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler          
-    BGTest$ggobiImageHandler = model.ggobiImageHandler
-    BGTest$figureGroup = 1
-    BGTest$saveImageHandler = saveImageHandler
-   BGTest$show()
+            saveList = list(
+         layout_x = list(type="gedit",text="5"),
+         layout_y = list(type="gedit", text="5") ,
+         graphics = list(type="gradio", items = c("lattice","ggplot2"), horizontal=TRUE)
+                            )
+
+        )
+        BGTest$okButtonHandler = model.ind.okButtonHandler
+        BGTest$cleanFigureButtonHandler = cleanFigureButtonHandler
+        BGTest$ggobiImageHandler = model.ggobiImageHandler
+        BGTest$figureGroup = 1
+        BGTest$saveImageHandler = saveImageHandler
+       BGTest$show()
+    }
 }
 
 pk.model.gof <- function()
