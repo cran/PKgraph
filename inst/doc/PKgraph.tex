@@ -138,9 +138,9 @@ and particularly those professionals who have only basic knowledge of R.
 \subsubsection{data.frame}
 PKgraph accepts one type of input data: data.frame. It can be model fit results from NONMEM, Monolix, SAS or R. This data.frame should include ID, time, observed concentration, individual predicated concentration, population predicted concentration, residuals, weighted residuals, parameters, random effects, etc. Details are as follows. Note: Abbreviated terms are explained in Table~\ref{tnew_function_1}.
 \begin{itemize}
-	\item Exploratory data analysis: ID, Time, CONC 
+	\item Exploratory data analysis: ID, Time, DV 
 	\item PK models: See details in Table~\ref{c2_s3_t12}. 
-	\item Model comparison: ID, Time, CONC, and interested variables from fit results, such as WRES, IPRE, etc. For this module, two data.frames come from two model fit results are required.
+	\item Model comparison: ID, Time, DV, and interested variables from fit results, such as WRES, IPRE, etc. For this module, two data.frames come from two model fit results are required.
 \end{itemize}
 Dependent on the modeling software, users need to convert the model fit results to this single data.frame. After that, PKgraph can read in and diagnose the model fit results. For NONMEM, the \textit{tab} file can be considered as this single data.frame, and read in R directly. For Monolix, there are a few output files, and users have to combine them as one single file, including all the interested variables.
 \newline
@@ -163,11 +163,7 @@ and the diagnostic module includes ``Exploratory data analysis'', ``PK model'',
 The five menu items in the diagnostic module can be utilized separately.  
 \newline
 \newline
-The basic module is utilized to read in data, configure data and manage data. The diagnostic module aims to test assumptions of population pharmacokinetic models. Please see the following section for details.
-\newline
-\newline
-The workflow of diagnosing models is as follows, 
-
+The basic module is utilized to read in data, configure data and manage data. The diagnostic module aims to test assumptions of population pharmacokinetic models. Please see ``Menu items in main interface'' section for details.
 \subsection{Basic graphical parameters}
 In PKgraph, we use a lot of popular arguments from R graphics. Here is the explanation. For those who want to know more about these parameters, please check R manual.
 \begin{table}[h!tb] \centering
@@ -199,7 +195,7 @@ WRES & Weighted residual \\
 IPRED & individual predicted concentration \\
 IWRES & Individual weighted residual \\
 COV & Covariates \\ 
-DV & Dependent variables (Usually observed concentration) \\
+DV & Dependent variables; Observed concentration \\
 IDV & Independent variables (Usually time) \\
 \hline
 \end{tabular}
@@ -230,7 +226,7 @@ This menu item is in charge of input, output and save data. It has the following
 \subsection{Configure}
 This menu itme is utilized to configure PKgraph. It has the following functions (Figure~\ref{configure}),
 \begin{itemize}
-	\item \textit{Set data type}: set the ID, TIME, CONC variables for current PK data. This configuration is used for integrative graphics to draw a time series plot automatically.
+	\item \textit{Set data type}: set the ID, TIME, DV variables for current PK data. This configuration is used for integrative graphics to draw a time series plot automatically.
 	\item \textit{Set working directory}: change current working directory in R.
 	\item \textit{Set saving format}: set up saving format for figures, including pdf, jpg, tiff, png
   bmp, win.metafile, and figure width and height. If figure width and height is not 
@@ -306,19 +302,18 @@ This is the key step to match data variables to default metric system. By this s
 \end{figure}
 \begin{table}[h!tb] \centering
 % Use: \begin{tabular{|lcc|} to put table in a box
-\begin{tabular}{lcc} \hline
+\begin{tabular}{ll} \hline
 \textbf{Package variable} & \textbf{Description}  \\ \hline
 ID & Patient ID \\
 TIME & Time after dose \\
-CONC & Observed concentration of drug in the body \\
+DV & Dependent variables; Observed concentration \\
+IDV & Independent variables \\
 PRED & Population predicted concentration \\
 RES & Residual \\
 WRES & Weighted residual \\
 IPRED & individual predicted concentration \\
 IWRES & Individual weighted residual \\
 COV & Covariates \\ 
-DV & Dependent variables \\
-IDV & Independent variables \\
 \hline
 \end{tabular}
 \caption{Package metric system}
@@ -456,7 +451,7 @@ This function is to visualize data from boostrap (multiple NONMEM runs). Let's u
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Model comparison}
-In this process, there are three main steps: 1) select datasets; 2) configure mapping; 3) comparison (Figure~\ref{modelc}). The first step is to select datasets for comparison. Currently the program only supports comparison of two models. Then users proceed to configure mapping by matching column names or variable names from two data sets. These matching variables are generally the variables from original data sets and they are not related to model fitting. For example, we have to match TIME, ID, CONC, WT, etc from original data, but not match those variables from model fit, such as ETA, RES, WRES, etc. When all parameters are set, the program offers three choices for comparison: ``histogram comparison'' (distribution comparison), ``scatter plot comparison'' and ``transform comparison''.\begin{figure}[h!tb] \centering
+In this process, there are three main steps: 1) select datasets; 2) configure mapping; 3) comparison (Figure~\ref{modelc}). The first step is to select datasets for comparison. Currently the program only supports comparison of two models. Then users proceed to configure mapping by matching column names or variable names from two data sets. These matching variables are generally the variables from original data sets and they are not related to model fitting. For example, we have to match TIME, ID, DV, WT, etc from original data, but not match those variables from model fit, such as ETA, RES, WRES, etc. When all parameters are set, the program offers three choices for comparison: ``histogram comparison'' (distribution comparison), ``scatter plot comparison'' and ``transform comparison''.\begin{figure}[h!tb] \centering
 \includegraphics[scale=0.6]{modelc.pdf}
 \caption{Menu items in \textit{Model comparison}}
 \label{modelc}

@@ -39,7 +39,7 @@ openDataHandler <- function(h,...)
     tbl[4,1, anchor=c(-1,-1)] = glabel("Data separated by ")
 
     #filetype = gradio(selected = 1, horizontal = FALSE, items = c("txt","csv"))
-    sepline = gdroplist(items = c("", "\\t", ","))
+    sepline = gdroplist(items = c("SPACE", "\\t", ","))
     tbl[4,2] = sepline
 
     tbl[5,1, anchor=c(-1,-1)] = glabel("Data has column names ")
@@ -107,7 +107,7 @@ openDataHandler <- function(h,...)
                 #action="read.csv",
                 handler = function(h,...)
                 {
-
+                  if (svalue(sepline) == "SPACE") svalue(sepline) <- ""
                   if (svalue(filetype) == "txt")
                   {
                      

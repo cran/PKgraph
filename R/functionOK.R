@@ -135,7 +135,7 @@ ggobiPlotType <- function()
 
       }
       
-      dataname <- c("ID variable:", "Time variable:", "Concentration variable:")
+      dataname <- c("ID variable:", "Time variable:", "Concentration variable(DV):")
       
       for (i in 1: length(dataname))
       {
@@ -1059,6 +1059,12 @@ model.ggobiImageHandler = function(.,h,...)
 {
       # get ggobi <-> pk.dialog page: variable list
       currentPage <- svalue(pk.dialog.notebook)
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
+      
       mydata <- getPKGGobi(currentPage)
 
         # check data absolute or not
@@ -1104,6 +1110,12 @@ validation.ggobiImageHandler = function(.,h,...)
 {
       # get ggobi <-> pk.dialog page: variable list
       currentPage <- svalue(pk.dialog.notebook)
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
+      
       mydata <- getPKGGobi(currentPage)$x
       g <- ggobi(mydata)
       display(g[1], "Parallel Coordinates Display")
@@ -1118,6 +1130,12 @@ psn.outlier.ggobiImageHandler = function(.,h,...)
 vis.outlier.ggobiImageHandler = function(.,h,...)
 {
       currentPage <- length(getNameDataSpecialPlot()) # new
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
+      
       id.var <- svalue(.$widgets[["Patient ID:"]])
       
       mydata <- getDataSpecialPlot(as.character(currentPage))
@@ -1163,6 +1181,12 @@ vis.outlier.ggobiImageHandler = function(.,h,...)
 boot.vis.ggobiImageHandler = function(.,h,...)
 {
       currentPage <- length(getNameDataSpecialPlot()) 
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
+      
       id.var <- svalue(.$widgets[["Patient ID:"]])
 
       mydata <- getDataSpecialPlot(as.character(currentPage))
@@ -2058,9 +2082,15 @@ summary.uni.okButtonHandler = function(.,h,...)
 
 summary.uni.ggobiImageHandler = function(.,h,...)   
 {
+      currentPage <- svalue(pk.dialog.notebook)
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
+
       g <- ggobiRun()
       
-      currentPage <- svalue(pk.dialog.notebook)
       mydata <- getPKGGobi(currentPage)
       display(g[1], pmode="Barchart", vars=list(X = mydata$x))
 }
@@ -2104,8 +2134,15 @@ summary.bi.okButtonHandler = function(.,h,...)
 
 summary.bi.ggobiImageHandler = function(.,h,...)  # 0603
 {
-      g <- ggobiRun()
       currentPage <- svalue(pk.dialog.notebook)
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
+
+      g <- ggobiRun()
+
       mydata <- getPKGGobi(currentPage)
       display(g[1], pmode="Scatterplot Display",
               vars=list(X=mydata$x, Y=mydata$y))
@@ -2220,10 +2257,15 @@ summary.para.okButtonHandler = function(.,h,...)
 
 summary.para.ggobiImageHandler = function(.,h,...)
 {
-
+      currentPage <- svalue(pk.dialog.notebook)
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
+      
     g <- ggobiRun()
    
-    currentPage <- svalue(pk.dialog.notebook)
     mydata <- getPKGGobi(currentPage)
 
     display(g[1], "Parallel Coordinates Display", vars=list(X=mydata$x))
@@ -2343,13 +2385,15 @@ summary.matrix.okButtonHandler = function(.,h,...)
 
 summary.matrix.ggobiImageHandler = function(.,h,...)
 {
-    #currentPage <- svalue(pk.dialog.notebook)
-    #ggobi.data <- getDataSpecialPlot(as.character(currentPage))
-    #g <- ggobi(ggobi.data)
+      currentPage <- svalue(pk.dialog.notebook)
+      if (currentPage == 0)
+      {
+          ErrorMessage("Please draw figure first!")
+          return(NULL)
+      }
 
     g <- ggobiRun()
    
-    currentPage <- svalue(pk.dialog.notebook)
     mydata <- getPKGGobi(currentPage)
     display(g[1], "Scatterplot Matrix", vars=list(X=mydata$x))
 }

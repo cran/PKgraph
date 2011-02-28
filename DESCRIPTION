@@ -1,7 +1,7 @@
 Package: PKgraph
 Title: Model diagnostics for population pharmacokinetic models
-Version: 1.3
-Date: 2011-02-20
+Version: 1.4
+Date: 2011-02-28
 Depends: R (>= 2.7.0), RGtk2, gWidgetsRGtk2, cairoDevice, lattice,
         rggobi, ggplot2
 Imports: RGtk2, gWidgetsRGtk2
@@ -22,5 +22,5 @@ LazyLoad: false
 Collate: global.r psnCdd.r psnBootstrap.r functionOK.r proto.r ggobi.r
         function.r handler.r PKgraphlayout.r PKgraph.r
 Repository: CRAN
-Date/Publication: 2011-02-24 09:00:07
-Packaged: 2011-02-24 02:32:24 UTC; sunx1
+Date/Publication: 2011-03-01 08:06:48
+Packaged: 2011-03-01 03:10:02 UTC; sunx1
