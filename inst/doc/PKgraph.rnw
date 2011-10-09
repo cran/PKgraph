@@ -60,7 +60,7 @@ libraries from
    ftp://ftp.gtk.org/pub/gtk/v2.8/
 \newline
 \newline
-2. Install RGtk2 (Please see RGtk2 Installation notes if you have problems) \newline
+2. Install RGtk2 (Please see RGtk2 Installation notes if you have problems. Remember to restart R after installation.) \newline
 \textit{install.packages(``RGtk2'')} \newline \newline
 3. install rggobi   \newline
 a. Download and install ggobi (www.ggobi.org)  \newline

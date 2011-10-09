@@ -1,0 +1,15 @@
+citHeader("How to cite PKgraph:")
+
+citEntry(entry = "Article",
+  author = "Xiaoyong Sun, Kai Wu, Dianne Cook",
+  title = "PKgraph: An R package for graphically diagnosing population pharmacokinetic models",
+  journal = "Computer Methods and Programs in Biomedicine",
+  month = "May",
+  year = "2011",
+  note = "doi:10.1016/j.cmpb.2011.03.016",
+  textVersion = "Xiaoyong Sun, Kai Wu, Dianne Cook.
+                PKgraph: An R package for graphically diagnosing population pharmacokinetic models.
+                Computer Methods and Programs in Biomedicine. May 7, 2011. 
+                doi:10.1016/j.cmpb.2011.03.016."
+)
+

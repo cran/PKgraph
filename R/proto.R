@@ -51,7 +51,8 @@ BasicGUI = proto(
     .$makeSave(container = g1)
     .$makeButtons(container = g1)
     ## command area
-    commandGroup = gexpandgroup("Command area", expand=TRUE)
+    #commandGroup = gexpandgroup("Command area", expand=TRUE)
+    commandGroup = ggroup(expand=TRUE)
     gline = gcommandline("", cont=commandGroup)
     global.data <- getCurrentData()
     svalue(gline) <- "#data name: global.data"
