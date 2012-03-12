@@ -1,4 +1,4 @@
 export(PKgraph)
 
-import("RGtk2", "gWidgetsRGtk2", "lattice", "ggplot2", "rggobi")
+import("RGtk2", "gWidgetsRGtk2", "lattice", "ggplot2", "rggobi", "proto")
 

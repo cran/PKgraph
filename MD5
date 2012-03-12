@@ -1,5 +1,5 @@
-50285eecc0853d7e7be778ded7820b3f *DESCRIPTION
-0526cb38ce666c46beb996350d070253 *NAMESPACE
+3b158a6431582296f5dd23cda32dbb73 *DESCRIPTION
+c40ecd9b7fe643cdd0d0d3bee47f4df2 *NAMESPACE
 c9ba6dcc71d588340b10c986931737c4 *R/PKgraph.r
 a1c0f659bc1eaf98fbfdcffd7c8ee2ad *R/PKgraphlayout.r
 5f8f61e4ba496e086a59f73bcd3b12e6 *R/function.r
@@ -15,7 +15,8 @@ b9df96b03f9008ee1bc1a3769ac1f252 *R/psnCdd.r
 6612989321ea180a7c5f2eac0385724a *inst/CITATION
 9c9a4deb8bbc7ea2425ed6b8437245ba *inst/doc/PKgraph.pdf
 23980259e576803a7e7da745711cc7e7 *inst/doc/PKgraph.rnw
-23980259e576803a7e7da745711cc7e7 *inst/doc/PKgraph.tex
 a550de84d0cd8586ea3a6ac397093e72 *man/PKgraph.Rd
 83cd29be4fca8b6e452ca616d619bc1f *man/pkdata.Rd
 21e8d45cf4f4fe7782d1952507e694cb *man/pkdata2.Rd
+23980259e576803a7e7da745711cc7e7 *vignettes/PKgraph.rnw
+23980259e576803a7e7da745711cc7e7 *vignettes/PKgraph.tex

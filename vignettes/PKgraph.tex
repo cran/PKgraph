@@ -1,0 +1,84 @@
+%\VignetteIndexEntry{PKgraph Overview}
+%\VignetteDepends{PKgraph}
+%\VignetteKeywords{PKgraph}
+%\VignetteKeywords{PKgraph}
+%\VignetteKeywords{PKgraph}
+%\VignettePackage{PKgraph}
+\documentclass[a4paper]{article}
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\textit{#1}}}
+
+\author{Xiaoyong Sun$^\dagger$$^\ddagger$\footnote{johnsunx1@gmail.com}}
+
+\usepackage{Sweave}
+\usepackage{hyperref}
+\begin{document}
+
+\setkeys{Gin}{width=1\textwidth}
+
+\title{User Guide for PKgraph Package}
+\maketitle
+\begin{center}$^\dagger$Binformatics and Computational Biology Program, $^\ddagger$Department of Statistics \\ Iowa State University, Ames, Iowa 50010, USA
+\end{center}
+
+\tableofcontents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+Population pharmacokinetic (PopPK) modeling has become increasing important in
+drug development because it allows unbalanced design, sparse data and the study
+of individual variation. However, this complexity of the model makes it a challenge
+to diagnose the fit.  Graphics can play an important and unique role in PopPK model diagnostics.
+The software described in this paper, PKgraph, provides a graphical user interface for
+PopPK model diagnosis with interactive graphics. It also provides an integrated and comprehensive platform for analysis
+of pharmacokinetic data including exploratory data analysis, goodness of model fit,
+model validation and model comparison. It can be used with a variety of modeling fitting software,
+including NONMEM, Monolix, SAS and R. PKgraph is programmed in R, and uses the R packages
+lattice, ggplot2 for static graphics, and rggobi for interactive graphics. This R package is
+supported with a user-friendly graphical user interface so that users can easily control diagnosing
+with simple clicks. The PKgraph software serves as a supplement to the existing packages:
+NONMEM, Xpose and PsN for diagnosing models.
+\newline
+\newline
+PKgraph is an R packaged built on the following R packages: RGtk2, gWidgets, gWidgetsRGtk2,
+lattice, and ggplot2. It requires R ($>$ 2.0) and  GTK+, and runs under Windows, Linux and Mac.
+\section{Installation}
+PKgraph needs to install the following programs and R packages:
+\newline \newline
+1. install GTK \newline
+For Windows, you can download the GTK Developer's Pack from
+\newline
+   http://gladewin32.sourceforge.net/
+\newline
+\newline
+For Unix, you can fetch the source files for the different
+libraries from
+\newline
+   ftp://ftp.gtk.org/pub/gtk/v2.8/
+\newline
+\newline
+2. Install RGtk2 (Please see RGtk2 Installation notes if you have problems) \newline
+\textit{install.packages(``RGtk2'')} \newline \newline
+3. install rggobi   \newline
+a. Download and install ggobi (www.ggobi.org)  \newline
+b. Install rggobi: \textit{install.packages(``rggobi'')} \newline \newline
+4. Install gWidgets  \newline
+\textit{install.packages(``gWidgets'')} \newline \newline
+5. Install cairoDevice \newline
+\textit{install.packages(``cairoDevice'')} \newline \newline
+6. Install gWidgetsRGtk2 \newline
+\textit{install.packages(``gWidgetsRGtk2'')} \newline \newline
+7. Install lattice  \newline
+\textit{install.packages(``lattice'')} \newline \newline
+8. Install ggplot2  \newline
+\textit{install.packages(``ggplot2'')} \newline \newline
+\section{User Guide}
+Please see the user guide at \url{https://sourceforge.net/projects/pkgraph/files/}
+
+
+
+\end{document}
